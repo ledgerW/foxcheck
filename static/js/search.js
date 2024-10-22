@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (response.status === 401) {
-                // If unauthorized, redirect to login page
                 window.location.href = '/login';
                 return;
             }

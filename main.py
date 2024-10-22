@@ -13,7 +13,7 @@ from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 from auth import get_current_active_user
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 
 limiter = Limiter(key_func=get_remote_address)
@@ -76,7 +76,7 @@ async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 class StatementRequest(BaseModel):
-    statement: str
+    statement: str = Field(..., min_length=1, max_length=1000)
 
 class Reference(BaseModel):
     title: str
@@ -91,27 +91,32 @@ class StatementResponse(BaseModel):
 @app.post("/api/check_statement", response_model=StatementResponse)
 @limiter.limit("10/minute")
 async def check_statement(request: StatementRequest, current_user: dict = Depends(get_current_active_user)):
-    if not request.statement:
-        raise HTTPException(status_code=400, detail="Missing statement parameter")
+    try:
+        if not request.statement:
+            raise HTTPException(status_code=400, detail="Missing statement parameter")
 
-    # For demonstration purposes, we'll return a mock result.
-    mock_result = StatementResponse(
-        verdict="Partially True",
-        explanation=f"The statement '{request.statement}' is partially true based on our analysis.",
-        references=[
-            Reference(
-                title="Fact-Checking Source 1",
-                source_url="https://example.com/fact-check1",
-                summary="This source provides context for part of the statement."
-            ),
-            Reference(
-                title="Fact-Checking Source 2",
-                source_url="https://example.com/fact-check2",
-                summary="This source contradicts a portion of the statement."
-            )
-        ]
-    )
-    return mock_result
+        # For demonstration purposes, we'll return a mock result.
+        mock_result = StatementResponse(
+            verdict="Partially True",
+            explanation=f"The statement '{request.statement}' is partially true based on our analysis.",
+            references=[
+                Reference(
+                    title="Fact-Checking Source 1",
+                    source_url="https://example.com/fact-check1",
+                    summary="This source provides context for part of the statement."
+                ),
+                Reference(
+                    title="Fact-Checking Source 2",
+                    source_url="https://example.com/fact-check2",
+                    summary="This source contradicts a portion of the statement."
+                )
+            ]
+        )
+        return mock_result
+    except ValueError as ve:
+        raise HTTPException(status_code=422, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
 @app.get("/api/auth/status")
 async def auth_status(current_user: dict = Depends(get_current_active_user)):
