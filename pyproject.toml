@@ -10,6 +10,7 @@ dependencies = [
     "chainlit>=1.2.0",
     "email-validator>=2.2.0",
     "fastapi>=0.112.4",
+    "jinja2>=3.1.4",
     "langchain-community>=0.3.3",
     "langchain-experimental>=0.3.2",
     "langchain-openai>=0.2.3",
