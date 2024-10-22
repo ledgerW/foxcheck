@@ -113,5 +113,9 @@ async def check_statement(request: StatementRequest, current_user: dict = Depend
     )
     return mock_result
 
+@app.get("/api/auth/status")
+async def auth_status(current_user: dict = Depends(get_current_active_user)):
+    return {"authenticated": True, "username": current_user.username}
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

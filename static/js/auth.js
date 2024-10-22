@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const registerForm = document.getElementById('register-form');
     const loginForm = document.getElementById('login-form');
+    const logoutButton = document.getElementById('logout-button');
 
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
@@ -8,6 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
+    }
+
+    if (logoutButton) {
+        logoutButton.addEventListener('click', handleLogout);
     }
 
     async function handleRegister(e) {
@@ -69,4 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('An error occurred during login. Please try again.');
         }
     }
+
+    async function handleLogout() {
+        localStorage.removeItem('access_token');
+        alert('Logged out successfully!');
+        window.location.href = '/';
+    }
 });
+
+// Export the handleLogout function for use in other scripts
+window.handleLogout = handleLogout;

@@ -25,10 +25,24 @@
             font-weight: bold;
             color: #4285F4;
         }
+        .user-menu {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="user-menu">
+            <div id="login-button" style="display: none;">
+                <a href="/login" class="btn btn-primary">Log In</a>
+            </div>
+            <div id="user-info" style="display: none;">
+                <span id="username-display" class="me-2"></span>
+                <button id="logout-button" class="btn btn-secondary">Log Out</button>
+            </div>
+        </div>
         <div class="search-container">
             <div class="logo">Statement Checker</div>
             <div class="input-group mb-3">
@@ -43,6 +57,7 @@
             <div id="search-results"></div>
         </div>
     </div>
+    <script src="/static/js/auth.js"></script>
     <script src="/static/js/search.js"></script>
 </body>
 </html>
