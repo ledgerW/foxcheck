@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from database import get_session
 from models import User
 from schemas import TokenData
@@ -20,7 +21,8 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 async def authenticate_user(username: str, password: str, db: AsyncSession):
-    user = await db.get(User, username)
+    result = await db.execute(select(User).where(User.username == username))
+    user = result.scalars().first()
     if not user or not verify_password(password, user.hashed_password):
         return False
     return user
@@ -49,7 +51,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = await db.get(User, token_data.username)
+    result = await db.execute(select(User).where(User.username == token_data.username))
+    user = result.scalars().first()
     if user is None:
         raise credentials_exception
     return user
