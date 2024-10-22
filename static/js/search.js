@@ -23,9 +23,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 },
                 body: JSON.stringify({ statement: query }),
             });
+
+            if (response.status === 401) {
+                // If unauthorized, redirect to login page
+                window.location.href = '/login';
+                return;
+            }
 
             if (!response.ok) {
                 throw new Error('Statement check request failed');
@@ -34,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             displayResults(data);
         } catch (error) {
-            searchResults.innerHTML = '<p>An error occurred while checking the statement. Please try again.</p>';
+            searchResults.innerHTML = '<p class="text-danger">An error occurred while checking the statement. Please try again.</p>';
             console.error('Statement check error:', error);
         } finally {
             loadingSpinner.style.display = 'none';

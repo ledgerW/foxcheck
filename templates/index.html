@@ -10,6 +10,7 @@
         .search-container {
             max-width: 600px;
             margin: 0 auto;
+            margin-top: 150px;
         }
         #search-results {
             margin-top: 20px;
@@ -17,15 +18,22 @@
         .spinner-border {
             display: none;
         }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 48px;
+            font-weight: bold;
+            color: #4285F4;
+        }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="mb-4 text-center">Statement Checker</h1>
+    <div class="container">
         <div class="search-container">
+            <div class="logo">Statement Checker</div>
             <div class="input-group mb-3">
-                <input type="text" id="search-input" class="form-control" placeholder="Enter a statement to check">
-                <button class="btn btn-primary" type="button" id="search-button">Check</button>
+                <input type="text" id="search-input" class="form-control form-control-lg" placeholder="Enter a statement to check">
+                <button class="btn btn-primary btn-lg" type="button" id="search-button">Check</button>
             </div>
             <div class="text-center">
                 <div class="spinner-border text-primary" role="status" id="loading-spinner">
