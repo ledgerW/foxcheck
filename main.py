@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
@@ -13,6 +13,8 @@ from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 from auth import get_current_active_user
+from pydantic import BaseModel
+from typing import List
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -73,32 +75,43 @@ async def register_page(request: Request):
 async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
-@app.post("/api/check_statement")
+class StatementRequest(BaseModel):
+    statement: str
+
+class Reference(BaseModel):
+    title: str
+    source_url: str
+    summary: str
+
+class StatementResponse(BaseModel):
+    verdict: str
+    explanation: str
+    references: List[Reference]
+
+@app.post("/api/check_statement", response_model=StatementResponse)
 @limiter.limit("10/minute")
-async def check_statement(request: Request):
-    data = await request.json()
-    statement = data.get("statement")
-    if not statement:
-        return JSONResponse(status_code=400, content={"error": "Missing statement parameter"})
+async def check_statement(request: StatementRequest, current_user: dict = Depends(get_current_active_user)):
+    if not request.statement:
+        raise HTTPException(status_code=400, detail="Missing statement parameter")
 
     # For demonstration purposes, we'll return a mock result.
-    mock_result = {
-        "verdict": "Partially True",
-        "explanation": f"The statement '{statement}' is partially true based on our analysis.",
-        "references": [
-            {
-                "title": "Fact-Checking Source 1",
-                "source_url": "https://example.com/fact-check1",
-                "summary": "This source provides context for part of the statement."
-            },
-            {
-                "title": "Fact-Checking Source 2",
-                "source_url": "https://example.com/fact-check2",
-                "summary": "This source contradicts a portion of the statement."
-            }
+    mock_result = StatementResponse(
+        verdict="Partially True",
+        explanation=f"The statement '{request.statement}' is partially true based on our analysis.",
+        references=[
+            Reference(
+                title="Fact-Checking Source 1",
+                source_url="https://example.com/fact-check1",
+                summary="This source provides context for part of the statement."
+            ),
+            Reference(
+                title="Fact-Checking Source 2",
+                source_url="https://example.com/fact-check2",
+                summary="This source contradicts a portion of the statement."
+            )
         ]
-    }
-    return JSONResponse(content=mock_result)
+    )
+    return mock_result
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

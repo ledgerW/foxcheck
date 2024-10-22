@@ -35,13 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (!response.ok) {
-                throw new Error('Statement check request failed');
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'An error occurred while checking the statement');
             }
 
             const data = await response.json();
             displayResults(data);
         } catch (error) {
-            searchResults.innerHTML = '<p class="text-danger">An error occurred while checking the statement. Please try again.</p>';
+            searchResults.innerHTML = `<p class="text-danger">${error.message}</p>`;
             console.error('Statement check error:', error);
         } finally {
             loadingSpinner.style.display = 'none';
