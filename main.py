@@ -24,7 +24,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
 
-app = FastAPI(title="AI-Powered Search")
+app = FastAPI(title="Statement Checker")
 
 # CORS middleware setup
 app.add_middleware(
@@ -64,28 +64,32 @@ async def on_startup():
 async def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-@app.post("/api/search")
+@app.post("/api/check_statement")
 @limiter.limit("10/minute")
-async def search(request: Request):
+async def check_statement(request: Request):
     data = await request.json()
-    query = data.get("query")
-    if not query:
-        return JSONResponse(status_code=400, content={"error": "Missing query parameter"})
+    statement = data.get("statement")
+    if not statement:
+        return JSONResponse(status_code=400, content={"error": "Missing statement parameter"})
 
     # For demonstration purposes, we'll return a mock result.
-    mock_results = [
-        {
-            "title": "Search Result 1",
-            "snippet": f"This is a mock result for the query: {query}",
-            "link": "https://example.com/result1"
-        },
-        {
-            "title": "Search Result 2",
-            "snippet": f"Another mock result for: {query}",
-            "link": "https://example.com/result2"
-        }
-    ]
-    return JSONResponse(content=mock_results)
+    mock_result = {
+        "verdict": "Partially True",
+        "explanation": f"The statement '{statement}' is partially true based on our analysis.",
+        "references": [
+            {
+                "title": "Fact-Checking Source 1",
+                "source_url": "https://example.com/fact-check1",
+                "summary": "This source provides context for part of the statement."
+            },
+            {
+                "title": "Fact-Checking Source 2",
+                "source_url": "https://example.com/fact-check2",
+                "summary": "This source contradicts a portion of the statement."
+            }
+        ]
+    }
+    return JSONResponse(content=mock_result)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
