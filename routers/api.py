@@ -23,6 +23,7 @@ async def check_statement(
     db: AsyncSession = Depends(get_session)
 ):
     try:
+        print(f"Statement: {statement}")
         fact_check_chain = (
             {"statement": RunnablePassthrough(), "wiki": wiki_retriever, 'web': web_retriever, 'arxiv': arxiv_retriever}
             | RunnablePassthrough.assign(
@@ -35,6 +36,7 @@ async def check_statement(
         )
 
         verdict = await fact_check_chain.ainvoke(statement)
+        print(json.loads(verdict.model_dump_json()))
         return json.loads(verdict.model_dump_json())
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

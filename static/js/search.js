@@ -19,7 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function performSearch() {
         const query = searchInput.value.trim();
-        if (query === '') return;
+        if (query === '') {
+            displayError('Please enter a statement to check.');
+            return;
+        }
 
         searchResults.innerHTML = '';
         loadingSpinner.style.display = 'inline-block';
@@ -47,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             displayResults(data);
         } catch (error) {
-            searchResults.innerHTML = `<p class="text-danger">${error.message}</p>`;
+            displayError(error.message);
             console.error('Statement check error:', error);
         } finally {
             loadingSpinner.style.display = 'none';
@@ -74,6 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         searchResults.innerHTML = resultHtml;
+    }
+
+    function displayError(message) {
+        searchResults.innerHTML = `<p class="text-danger">${message}</p>`;
     }
 
     async function checkAuthStatus() {

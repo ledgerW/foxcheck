@@ -76,7 +76,7 @@ async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 class StatementRequest(BaseModel):
-    statement: str = Field(..., min_length=1, max_length=1000)
+    statement: str = Field(..., min_length=1, max_length=1000, description="The statement to be checked")
 
 class Reference(BaseModel):
     title: str
@@ -92,9 +92,6 @@ class StatementResponse(BaseModel):
 @limiter.limit("10/minute")
 async def check_statement(request: StatementRequest, current_user: dict = Depends(get_current_active_user)):
     try:
-        if not request.statement:
-            raise HTTPException(status_code=400, detail="Missing statement parameter")
-
         # For demonstration purposes, we'll return a mock result.
         mock_result = StatementResponse(
             verdict="Partially True",
@@ -114,7 +111,7 @@ async def check_statement(request: StatementRequest, current_user: dict = Depend
         )
         return mock_result
     except ValueError as ve:
-        raise HTTPException(status_code=422, detail=str(ve))
+        raise HTTPException(status_code=422, detail=f"Invalid input: {str(ve)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
