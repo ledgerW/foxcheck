@@ -29,6 +29,9 @@ waitForPort = 8000
 
 [deployment]
 run = ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port 8000 --reload"]
+#run = ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port 80"]
+build = ["sh", "-c", "echo \"no build\""]
+deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 8000
