@@ -1,0 +1,24 @@
+[project]
+name = "repl-nix-asyncfastapichain"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "asyncpg>=0.30.0",
+    "bcrypt>=4.2.0",
+    "chainlit>=1.2.0",
+    "email-validator>=2.2.0",
+    "fastapi>=0.112.4",
+    "langchain-community>=0.3.3",
+    "langchain>=0.3.4",
+    "openai>=1.52.0",
+    "passlib>=1.7.4",
+    "psycopg2-binary>=2.9.10",
+    "pydantic-settings>=2.6.0",
+    "pydantic>=2.9.2",
+    "python-jose>=3.3.0",
+    "python-multipart>=0.0.9",
+    "sqlalchemy>=2.0.36",
+    "sqlmodel>=0.0.22",
+    "uvicorn>=0.25.0",
+]
