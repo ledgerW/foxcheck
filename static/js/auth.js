@@ -6,6 +6,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const loggedInMenu = document.getElementById('logged-in-menu');
     const usernameDisplay = document.getElementById('username-display');
 
+    // Check if we're on login/register page and redirect if already logged in
+    if (window.location.pathname === '/login' || window.location.pathname === '/register') {
+        if (localStorage.getItem('access_token')) {
+            window.location.href = '/';
+            return;
+        }
+    }
+
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
     }
@@ -66,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const data = await response.json();
                 localStorage.setItem('access_token', data.access_token);
-                alert('Login successful!');
+                await checkAuthStatus();
                 window.location.href = '/';
             } else {
                 const errorData = await response.json();
@@ -86,31 +94,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function checkAuthStatus() {
         try {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                updateUIForLoggedOutState();
+                return;
+            }
+
             const response = await fetch('/api/auth/status', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    'Authorization': `Bearer ${token}`
                 }
             });
 
             if (response.ok) {
                 const data = await response.json();
                 if (data.authenticated) {
-                    loggedOutMenu.style.display = 'none';
-                    loggedInMenu.style.display = 'block';
-                    usernameDisplay.textContent = data.username;
+                    updateUIForLoggedInState(data.username);
                 } else {
-                    loggedOutMenu.style.display = 'block';
-                    loggedInMenu.style.display = 'none';
+                    updateUIForLoggedOutState();
                 }
             } else {
-                loggedOutMenu.style.display = 'block';
-                loggedInMenu.style.display = 'none';
+                updateUIForLoggedOutState();
             }
         } catch (error) {
             console.error('Error checking auth status:', error);
-            loggedOutMenu.style.display = 'block';
-            loggedInMenu.style.display = 'none';
+            updateUIForLoggedOutState();
         }
+    }
+
+    function updateUIForLoggedInState(username) {
+        if (loggedOutMenu) loggedOutMenu.style.display = 'none';
+        if (loggedInMenu) loggedInMenu.style.display = 'block';
+        if (usernameDisplay) usernameDisplay.textContent = username;
+    }
+
+    function updateUIForLoggedOutState() {
+        if (loggedOutMenu) loggedOutMenu.style.display = 'block';
+        if (loggedInMenu) loggedInMenu.style.display = 'none';
+        if (usernameDisplay) usernameDisplay.textContent = '';
     }
 
     // Initial auth status check
