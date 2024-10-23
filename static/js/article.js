@@ -86,47 +86,57 @@ document.addEventListener('DOMContentLoaded', () => {
         // Display content
         document.getElementById('article-content').textContent = article.text;
         
-        // Display statements
+        // Display statements with their associated references
         const statementsContainer = document.getElementById('statements-container');
         if (article.statements && article.statements.length > 0) {
-            const statementsHtml = article.statements.map((statement, index) => `
-                <div class="statement-card">
-                    <div class="statement-header" onclick="toggleStatement(${index})">
-                        <span class="statement-text">${statement.content}</span>
-                        <i id="statement-icon-${index}" class="bi bi-chevron-right"></i>
+            const statementsHtml = article.statements.map((statement, index) => {
+                // Find references associated with this statement
+                const statementRefs = article.references.filter(ref => ref.statement_id === statement.id);
+                
+                return `
+                    <div class="statement-card">
+                        <div class="statement-header" onclick="toggleStatement(${index})">
+                            <span class="statement-text">${statement.content}</span>
+                            <i id="statement-icon-${index}" class="bi bi-chevron-right"></i>
+                        </div>
+                        <div id="statement-content-${index}" class="statement-content">
+                            ${statement.verdict ? `
+                                <div class="verdict mb-3">
+                                    <strong>Verdict:</strong> ${statement.verdict}
+                                </div>
+                            ` : ''}
+                            ${statement.explanation ? `
+                                <div class="explanation mb-3">
+                                    <strong>Explanation:</strong> ${statement.explanation}
+                                </div>
+                            ` : ''}
+                            ${statementRefs.length > 0 ? `
+                                <div class="statement-references">
+                                    <h5>References</h5>
+                                    ${statementRefs.map(reference => `
+                                        <div class="reference-item">
+                                            <h6 class="mb-2">
+                                                <a href="${reference.url}" target="_blank" class="text-primary">
+                                                    ${reference.title || reference.url}
+                                                </a>
+                                            </h6>
+                                            ${reference.content ? `
+                                                <p class="mb-2">${reference.content}</p>
+                                            ` : ''}
+                                            ${reference.context ? `
+                                                <p class="text-muted mb-0"><small>${reference.context}</small></p>
+                                            ` : ''}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
-                    <div id="statement-content-${index}" class="statement-content">
-                        ${statement.verdict ? `
-                            <div class="verdict my-2">
-                                <strong>Verdict:</strong> ${statement.verdict}
-                            </div>
-                        ` : ''}
-                        ${statement.explanation ? `
-                            <div class="explanation mb-2">
-                                <strong>Explanation:</strong> ${statement.explanation}
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             statementsContainer.innerHTML = statementsHtml;
         } else {
             statementsContainer.innerHTML = '<p>No statements available for this article.</p>';
-        }
-        
-        // Display references
-        const referencesContainer = document.getElementById('references-container');
-        if (article.references && article.references.length > 0) {
-            const referencesHtml = article.references.map(reference => `
-                <div class="reference-item mb-3">
-                    <h5><a href="${reference.url}" target="_blank">${reference.title || reference.url}</a></h5>
-                    ${reference.content ? `<p class="mb-1">${reference.content}</p>` : ''}
-                    ${reference.context ? `<p class="text-muted"><small>${reference.context}</small></p>` : ''}
-                </div>
-            `).join('');
-            referencesContainer.innerHTML = referencesHtml;
-        } else {
-            referencesContainer.innerHTML = '<p>No references available for this article.</p>';
         }
 
         // Make toggleStatement function globally available

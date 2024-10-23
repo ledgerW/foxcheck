@@ -80,10 +80,25 @@
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease-out;
+            padding: 0 1rem;
         }
         .statement-content.expanded {
-            max-height: 1000px;
-            transition: max-height 0.5s ease-in;
+            max-height: 2000px;
+            transition: max-height 0.8s ease-in;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+        .statement-references {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+        .reference-item {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
         }
         .loading-spinner {
             display: none;
@@ -154,14 +169,9 @@
     </div>
 
     <div class="sidebar" id="sidebar">
-        <div class="statements-section mb-4">
+        <div class="statements-section">
             <h3>Statements</h3>
             <div id="statements-container"></div>
-        </div>
-        
-        <div class="references-section">
-            <h3>References</h3>
-            <div id="references-container"></div>
         </div>
     </div>
 
