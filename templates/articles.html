@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articles - Statement Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .article-card {
+            transition: transform 0.2s;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">Statement Checker</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/articles">Articles</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="user-menu">
+                <div id="login-button" style="display: none;">
+                    <a href="/login" class="btn btn-primary">Log In</a>
+                </div>
+                <div id="user-info" style="display: none;">
+                    <span id="username-display" class="me-2"></span>
+                    <button id="logout-button" class="btn btn-secondary">Log Out</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h1>Articles</h1>
+            </div>
+            <div class="col-auto">
+                <button id="new-article-btn" class="btn btn-primary" style="display: none;">New Article</button>
+            </div>
+        </div>
+        
+        <div id="articles-container" class="row row-cols-1 row-cols-md-2 g-4">
+            <!-- Articles will be loaded here -->
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/articles.js"></script>
+</body>
+</html>

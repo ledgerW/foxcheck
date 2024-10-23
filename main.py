@@ -68,6 +68,10 @@ async def on_startup():
 async def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get("/articles")
+async def articles_page(request: Request):
+    return templates.TemplateResponse("articles.html", {"request": request})
+
 @app.get("/register")
 async def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
