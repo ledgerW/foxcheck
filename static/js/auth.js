@@ -12,9 +12,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Check if we're on login/register page and redirect if already logged in
     if (window.location.pathname === '/login' || window.location.pathname === '/register') {
-        if (localStorage.getItem('access_token')) {
-            window.location.href = '/';
-            return;
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            // Verify the token is valid before redirecting
+            fetch('/api/auth/status', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                // If token is invalid, remove it
+                localStorage.removeItem('access_token');
+                throw new Error('Invalid token');
+            })
+            .then(data => {
+                if (data.authenticated) {
+                    window.location.href = '/';
+                }
+            })
+            .catch(error => {
+                console.error('Auth check error:', error);
+                localStorage.removeItem('access_token');
+            });
         }
     }
 
@@ -119,13 +141,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.authenticated) {
                     updateUIForLoggedInState(data.username);
                 } else {
+                    localStorage.removeItem('access_token');
                     updateUIForLoggedOutState();
                 }
             } else {
+                localStorage.removeItem('access_token');
                 updateUIForLoggedOutState();
             }
         } catch (error) {
             console.error('Error checking auth status:', error);
+            localStorage.removeItem('access_token');
             updateUIForLoggedOutState();
         }
     }
@@ -148,22 +173,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if (usernameDisplayMobile) usernameDisplayMobile.textContent = '';
     }
 
-    // Initialize Bootstrap tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Close mobile menu when clicking outside
-    document.addEventListener('click', function(event) {
-        const navbar = document.querySelector('.navbar-collapse');
-        const toggler = document.querySelector('.navbar-toggler');
+    // Handle mobile menu closing when clicking outside
+    document.addEventListener('click', (event) => {
+        const navbarCollapse = document.querySelector('.navbar-collapse');
+        const navbarToggler = document.querySelector('.navbar-toggler');
         
-        if (navbar.classList.contains('show') && 
-            !navbar.contains(event.target) && 
-            !toggler.contains(event.target)) {
-            navbar.classList.remove('show');
+        if (navbarCollapse && navbarCollapse.classList.contains('show') &&
+            !navbarCollapse.contains(event.target) &&
+            !navbarToggler.contains(event.target)) {
+            navbarCollapse.classList.remove('show');
         }
+
+        // Handle dropdown menu closing
+        const dropdowns = document.querySelectorAll('.dropdown-menu.show');
+        const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+        
+        dropdowns.forEach(dropdown => {
+            if (!dropdown.contains(event.target) && 
+                !Array.from(dropdownToggles).some(toggle => toggle.contains(event.target))) {
+                dropdown.classList.remove('show');
+            }
+        });
     });
 
     // Initial auth status check
