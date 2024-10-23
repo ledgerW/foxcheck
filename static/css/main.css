@@ -1,10 +1,25 @@
-/* Common styles for navbar and responsive design */
-.navbar {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    background-color: #ffffff !important;
-    padding: 1rem 0;
+/* Reset and base styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa;
 }
 
+/* Header and footer */
+.navbar, .footer {
+    background-color: #ffffff;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* Navbar components */
 .navbar-brand {
     font-weight: 600;
     color: #2c3e50 !important;
@@ -13,7 +28,7 @@
 .navbar-toggler {
     border: none;
     padding: 0.5rem;
-    margin-right: 0.5rem;
+    transition: transform 0.2s;
 }
 
 .navbar-toggler:focus {
@@ -21,36 +36,49 @@
     box-shadow: none;
 }
 
+.navbar-toggler .bi-list {
+    font-size: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.navbar-toggler[aria-expanded="true"] .bi-list {
+    transform: rotate(90deg);
+}
+
+/* Navigation links */
 .navbar-nav {
-    align-items: center;
+    margin-left: 1rem;
 }
 
 .nav-link {
     color: #2c3e50 !important;
     font-weight: 500;
-    padding: 0.5rem 1rem !important;
-    transition: all 0.3s ease;
+    padding: 0.75rem 1rem !important;
+    transition: all 0.2s ease;
+    border-radius: 4px;
 }
 
-.nav-link:hover {
+.nav-link:hover, .nav-link.active {
     color: #3498db !important;
+    background-color: rgba(52, 152, 219, 0.1);
 }
 
-.nav-link.active {
-    color: #3498db !important;
+/* User menu dropdown */
+.user-menu {
+    margin-left: auto;
 }
 
-/* Dropdown styles */
 .dropdown-toggle {
     padding: 0.5rem;
     border: none;
     background: none;
+    display: flex;
+    align-items: center;
 }
 
 .dropdown-toggle:hover,
 .dropdown-toggle:focus {
     background: none;
-    border: none;
     box-shadow: none;
 }
 
@@ -58,87 +86,122 @@
     display: none;
 }
 
+.dropdown-toggle .bi {
+    font-size: 1.2rem;
+}
+
 .dropdown-menu {
     border: none;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     border-radius: 8px;
     padding: 0.5rem;
+    min-width: 200px;
 }
 
 .dropdown-item {
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
     border-radius: 4px;
     color: #2c3e50;
     transition: all 0.2s ease;
 }
 
 .dropdown-item:hover {
-    background-color: #f8f9fa;
+    background-color: rgba(52, 152, 219, 0.1);
     color: #3498db;
 }
 
-.dropdown-item-text {
-    color: #2c3e50;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-}
-
-.dropdown-divider {
-    margin: 0.5rem 0;
-}
-
-#logged-in-menu, #logged-out-menu,
-#logged-in-menu-mobile, #logged-out-menu-mobile {
-    width: 100%;
-}
-
-/* Responsive styles */
-@media (max-width: 991px) {
+/* Mobile menu styles */
+@media (max-width: 991.98px) {
     .navbar-collapse {
-        background-color: white;
-        padding: 1rem;
-        border-radius: 8px;
+        position: fixed;
+        top: 72px;
+        left: 0;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        padding-bottom: 1rem;
+        width: 100%;
+        height: auto;
+        background-color: #ffffff;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin-top: 1rem;
-        position: absolute;
-        width: calc(100% - 2rem);
-        top: 100%;
-        left: 1rem;
+        transition: transform 0.3s ease-in-out;
+        transform: translateY(-100%);
+    }
+
+    .navbar-collapse.show {
+        transform: translateY(0);
     }
 
     .navbar-nav {
-        gap: 0.5rem;
+        margin: 1rem 0;
     }
 
     .nav-link {
         padding: 0.75rem 1rem !important;
-        border-radius: 6px;
-    }
-
-    .nav-link:hover {
-        background-color: #f8f9fa;
     }
 
     .dropdown-menu {
-        position: absolute !important;
-        width: auto;
-        min-width: 200px;
+        box-shadow: none;
+        border-radius: 4px;
+        background-color: rgba(52, 152, 219, 0.1);
+    }
+
+    .mobile-user-menu {
+        display: flex;
+        justify-content: flex-end;
+        margin-left: auto;
     }
 }
 
-/* Main content and general layout */
-body {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
+/* Reusable layout components */
 .main-content {
     flex: 1;
+    padding: 2rem 0;
 }
 
+.content-container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 2rem;
+    margin: 2rem 0;
+}
+
+.page-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    padding: 2rem 0;
+}
+
+/* Card styles */
+.article-card {
+    background-color: #ffffff;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 1.5rem;
+}
+
+.article-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+/* Footer */
 .footer {
-    background-color: #f8f9fa;
+    background-color: #ffffff;
     padding: 2rem 0;
     margin-top: auto;
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Utility classes */
+.loading-spinner {
+    display: none;
+    margin: 2rem auto;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
 }
