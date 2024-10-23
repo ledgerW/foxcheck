@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy import update, delete
 from typing import Optional
 from models import User, Article, Statement, Reference
@@ -23,7 +24,10 @@ async def get_user(db: AsyncSession, user_id: int):
     return await db.get(User, user_id)
 
 async def get_user_by_email(db: AsyncSession, email: str):
-    result = await db.execute(select(User).where(User.email == email))
+    result = await db.execute(
+        select(User)
+        .where(User.email == email)
+    )
     return result.scalars().first()
 
 async def get_users(db: AsyncSession, skip: int = 0, limit: int = 100):
@@ -62,11 +66,31 @@ async def create_article(db: AsyncSession, article: ArticleCreate, user_id: int)
     return db_article
 
 async def get_article(db: AsyncSession, article_id: int):
-    return await db.get(Article, article_id)
+    stmt = (
+        select(Article)
+        .options(
+            joinedload(Article.user),
+            joinedload(Article.statements).joinedload(Statement.references),
+            joinedload(Article.references)
+        )
+        .where(Article.id == article_id)
+    )
+    result = await db.execute(stmt)
+    return result.unique().scalar_one_or_none()
 
 async def get_articles(db: AsyncSession, skip: int = 0, limit: int = 100):
-    result = await db.execute(select(Article).offset(skip).limit(limit))
-    return result.scalars().all()
+    stmt = (
+        select(Article)
+        .options(
+            joinedload(Article.user),
+            joinedload(Article.statements).joinedload(Statement.references),
+            joinedload(Article.references)
+        )
+        .offset(skip)
+        .limit(limit)
+    )
+    result = await db.execute(stmt)
+    return result.unique().scalars().all()
 
 async def update_article(db: AsyncSession, article: Article, article_update: ArticleUpdate):
     update_data = article_update.dict(exclude_unset=True)
@@ -99,15 +123,32 @@ async def create_statement(db: AsyncSession, statement: StatementCreate, article
     return db_statement
 
 async def get_statement(db: AsyncSession, statement_id: int):
-    return await db.get(Statement, statement_id)
+    stmt = (
+        select(Statement)
+        .options(joinedload(Statement.references))
+        .where(Statement.id == statement_id)
+    )
+    result = await db.execute(stmt)
+    return result.unique().scalar_one_or_none()
 
 async def get_statements(db: AsyncSession, skip: int = 0, limit: int = 100):
-    result = await db.execute(select(Statement).offset(skip).limit(limit))
-    return result.scalars().all()
+    stmt = (
+        select(Statement)
+        .options(joinedload(Statement.references))
+        .offset(skip)
+        .limit(limit)
+    )
+    result = await db.execute(stmt)
+    return result.unique().scalars().all()
 
 async def get_article_statements(db: AsyncSession, article_id: int):
-    result = await db.execute(select(Statement).where(Statement.article_id == article_id))
-    return result.scalars().all()
+    stmt = (
+        select(Statement)
+        .options(joinedload(Statement.references))
+        .where(Statement.article_id == article_id)
+    )
+    result = await db.execute(stmt)
+    return result.unique().scalars().all()
 
 async def update_statement(db: AsyncSession, statement: Statement, verdict: str, explanation: str):
     statement.verdict = verdict

@@ -10,6 +10,7 @@ class User(SQLModel, table=True):
     hashed_password: str
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    articles: List["Article"] = Relationship(back_populates="user")
 
 class Statement(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -22,6 +23,10 @@ class Statement(SQLModel, table=True):
     
     article: Optional["Article"] = Relationship(back_populates="statements")
     references: List["Reference"] = Relationship(back_populates="statement")
+
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {datetime: str}
 
 class Article(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -36,8 +41,13 @@ class Article(SQLModel, table=True):
     publication_date: Optional[datetime]
     extraction_date: datetime = Field(default_factory=datetime.utcnow)
     
+    user: Optional[User] = Relationship(back_populates="articles")
     statements: List[Statement] = Relationship(back_populates="article")
     references: List["Reference"] = Relationship(back_populates="article")
+
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {datetime: str}
 
     def set_links(self, links: List[str]) -> None:
         self.links = json.dumps(links)
@@ -56,3 +66,6 @@ class Reference(SQLModel, table=True):
     
     article: Optional[Article] = Relationship(back_populates="references")
     statement: Optional[Statement] = Relationship(back_populates="references")
+
+    class Config:
+        arbitrary_types_allowed = True
