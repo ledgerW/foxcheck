@@ -2,6 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const registerForm = document.getElementById('register-form');
     const loginForm = document.getElementById('login-form');
     const logoutButton = document.getElementById('logout-button');
+    const loggedOutMenu = document.getElementById('logged-out-menu');
+    const loggedInMenu = document.getElementById('logged-in-menu');
+    const usernameDisplay = document.getElementById('username-display');
 
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
@@ -77,10 +80,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleLogout() {
         localStorage.removeItem('access_token');
-        alert('Logged out successfully!');
+        await checkAuthStatus();
         window.location.href = '/';
     }
+
+    async function checkAuthStatus() {
+        try {
+            const response = await fetch('/api/auth/status', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.authenticated) {
+                    loggedOutMenu.style.display = 'none';
+                    loggedInMenu.style.display = 'block';
+                    usernameDisplay.textContent = data.username;
+                } else {
+                    loggedOutMenu.style.display = 'block';
+                    loggedInMenu.style.display = 'none';
+                }
+            } else {
+                loggedOutMenu.style.display = 'block';
+                loggedInMenu.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error checking auth status:', error);
+            loggedOutMenu.style.display = 'block';
+            loggedInMenu.style.display = 'none';
+        }
+    }
+
+    // Initial auth status check
+    checkAuthStatus();
 });
 
-// Export the handleLogout function for use in other scripts
+// Export functions for use in other scripts
 window.handleLogout = handleLogout;

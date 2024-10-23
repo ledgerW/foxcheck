@@ -13,14 +13,23 @@
                     <a class="nav-link{% if request.url.path == '/statement_checker' %} active{% endif %}" href="/statement_checker">Statement Checker</a>
                 </li>
             </ul>
-            <div class="user-menu">
-                <div id="login-button" style="display: none;">
-                    <a href="/login" class="btn btn-primary">Log In</a>
-                </div>
-                <div id="user-info" style="display: none;">
-                    <span id="username-display" class="me-2"></span>
-                    <button id="logout-button" class="btn btn-secondary">Log Out</button>
-                </div>
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-person-circle"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <!-- Login/Register links (shown when logged out) -->
+                    <div id="logged-out-menu">
+                        <li><a class="dropdown-item" href="/login">Login</a></li>
+                        <li><a class="dropdown-item" href="/register">Register</a></li>
+                    </div>
+                    <!-- User info and logout (shown when logged in) -->
+                    <div id="logged-in-menu" style="display: none;">
+                        <li><span class="dropdown-item-text" id="username-display"></span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item" id="logout-button">Logout</button></li>
+                    </div>
+                </ul>
             </div>
         </div>
     </div>
