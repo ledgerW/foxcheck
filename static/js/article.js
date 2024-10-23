@@ -1,7 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
     const articleId = window.location.pathname.split('/').pop();
     const loadingSpinner = document.querySelector('.loading-spinner');
-    
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const mainContent = document.getElementById('main-content');
+    let sidebarOpen = true;
+
+    // Sidebar toggle functionality
+    sidebarToggle.addEventListener('click', () => {
+        sidebarOpen = !sidebarOpen;
+        sidebar.classList.toggle('open', sidebarOpen);
+        sidebarToggle.classList.toggle('open', sidebarOpen);
+        mainContent.classList.toggle('sidebar-open', sidebarOpen);
+        sidebarToggle.innerHTML = sidebarOpen ? 
+            '<i class="bi bi-chevron-right"></i>' : 
+            '<i class="bi bi-chevron-left"></i>';
+    });
+
     function formatDate(dateString) {
         const options = { 
             year: 'numeric', 
@@ -31,12 +46,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const article = await response.json();
             displayArticle(article);
+
+            // Trigger sidebar open by default
+            sidebar.classList.add('open');
+            sidebarToggle.classList.add('open');
+            mainContent.classList.add('sidebar-open');
+            sidebarToggle.innerHTML = '<i class="bi bi-chevron-right"></i>';
         } catch (error) {
             console.error('Error loading article:', error);
             displayError(error.message);
         } finally {
             loadingSpinner.style.display = 'none';
         }
+    }
+
+    function toggleStatement(statementId) {
+        const content = document.getElementById(`statement-content-${statementId}`);
+        const icon = document.getElementById(`statement-icon-${statementId}`);
+        const isExpanded = content.classList.contains('expanded');
+        
+        content.classList.toggle('expanded');
+        icon.classList.toggle('bi-chevron-down');
+        icon.classList.toggle('bi-chevron-right');
     }
 
     function displayArticle(article) {
@@ -58,19 +89,24 @@ document.addEventListener('DOMContentLoaded', () => {
         // Display statements
         const statementsContainer = document.getElementById('statements-container');
         if (article.statements && article.statements.length > 0) {
-            const statementsHtml = article.statements.map(statement => `
+            const statementsHtml = article.statements.map((statement, index) => `
                 <div class="statement-card">
-                    <p class="mb-2">${statement.content}</p>
-                    ${statement.verdict ? `
-                        <div class="verdict mb-2">
-                            <strong>Verdict:</strong> ${statement.verdict}
-                        </div>
-                    ` : ''}
-                    ${statement.explanation ? `
-                        <div class="explanation">
-                            <strong>Explanation:</strong> ${statement.explanation}
-                        </div>
-                    ` : ''}
+                    <div class="statement-header" onclick="toggleStatement(${index})">
+                        <span class="statement-text">${statement.content}</span>
+                        <i id="statement-icon-${index}" class="bi bi-chevron-right"></i>
+                    </div>
+                    <div id="statement-content-${index}" class="statement-content">
+                        ${statement.verdict ? `
+                            <div class="verdict my-2">
+                                <strong>Verdict:</strong> ${statement.verdict}
+                            </div>
+                        ` : ''}
+                        ${statement.explanation ? `
+                            <div class="explanation mb-2">
+                                <strong>Explanation:</strong> ${statement.explanation}
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>
             `).join('');
             statementsContainer.innerHTML = statementsHtml;
@@ -82,16 +118,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const referencesContainer = document.getElementById('references-container');
         if (article.references && article.references.length > 0) {
             const referencesHtml = article.references.map(reference => `
-                <div class="reference-item">
+                <div class="reference-item mb-3">
                     <h5><a href="${reference.url}" target="_blank">${reference.title || reference.url}</a></h5>
-                    ${reference.content ? `<p>${reference.content}</p>` : ''}
-                    ${reference.context ? `<p><em>Context: ${reference.context}</em></p>` : ''}
+                    ${reference.content ? `<p class="mb-1">${reference.content}</p>` : ''}
+                    ${reference.context ? `<p class="text-muted"><small>${reference.context}</small></p>` : ''}
                 </div>
             `).join('');
             referencesContainer.innerHTML = referencesHtml;
         } else {
             referencesContainer.innerHTML = '<p>No references available for this article.</p>';
         }
+
+        // Make toggleStatement function globally available
+        window.toggleStatement = toggleStatement;
     }
 
     function displayError(message) {

@@ -5,15 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Article - Statement Checker</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             background-color: #f8f9fa;
+            overflow-x: hidden;
         }
         .content {
             flex: 1;
+            transition: margin-right 0.3s ease-in-out;
+        }
+        .content.sidebar-open {
+            margin-right: 400px;
         }
         .article-container {
             background-color: white;
@@ -31,26 +37,69 @@
             font-size: 1.1rem;
             line-height: 1.8;
         }
-        .statements-section {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid #dee2e6;
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            transition: right 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        .sidebar.open {
+            right: 0;
+        }
+        .sidebar-toggle {
+            position: fixed;
+            right: 20px;
+            top: 80px;
+            z-index: 1001;
+            transition: right 0.3s ease-in-out;
+        }
+        .sidebar-toggle.open {
+            right: 420px;
         }
         .statement-card {
             background-color: #f8f9fa;
             border-radius: 8px;
-            padding: 1.5rem;
+            padding: 1rem;
             margin-bottom: 1rem;
+            transition: all 0.3s ease;
         }
-        .references-section {
-            margin-top: 2rem;
+        .statement-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .reference-item {
-            margin-bottom: 1rem;
+        .statement-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .statement-content.expanded {
+            max-height: 1000px;
+            transition: max-height 0.5s ease-in;
         }
         .loading-spinner {
             display: none;
             margin: 2rem auto;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                right: -100%;
+            }
+            .content.sidebar-open {
+                margin-right: 0;
+            }
+            .sidebar-toggle.open {
+                right: 20px;
+            }
         }
     </style>
 </head>
@@ -83,7 +132,11 @@
         </div>
     </nav>
 
-    <div class="container content">
+    <button class="btn btn-primary sidebar-toggle" id="sidebar-toggle">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <div class="container content" id="main-content">
         <div class="loading-spinner text-center">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
@@ -97,16 +150,18 @@
                 <span id="article-domain"></span>
             </div>
             <div id="article-content" class="article-content"></div>
-            
-            <div class="statements-section">
-                <h3>Statements</h3>
-                <div id="statements-container"></div>
-            </div>
-            
-            <div class="references-section">
-                <h3>References</h3>
-                <div id="references-container"></div>
-            </div>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="statements-section mb-4">
+            <h3>Statements</h3>
+            <div id="statements-container"></div>
+        </div>
+        
+        <div class="references-section">
+            <h3>References</h3>
+            <div id="references-container"></div>
         </div>
     </div>
 
