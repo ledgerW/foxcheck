@@ -17,7 +17,7 @@ class Statement(SQLModel, table=True):
     content: str = Field(index=True)
     verdict: Optional[str] = Field(default=None)
     explanation: Optional[str] = Field(default=None)
-    references: Optional[str] = Field(default=None)  # Stores JSON list of references
+    references: Optional[str] = Field(default=None)  # JSON string field
     created_at: datetime = Field(default_factory=datetime.utcnow)
     article_id: Optional[int] = Field(default=None, foreign_key="article.id")
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
@@ -27,18 +27,25 @@ class Statement(SQLModel, table=True):
     def get_references(self) -> List[dict]:
         if not self.references:
             return []
-        if isinstance(self.references, str):
-            try:
-                return json.loads(self.references)
-            except json.JSONDecodeError:
-                return []
-        return []
+        try:
+            return json.loads(self.references) if isinstance(self.references, str) else []
+        except json.JSONDecodeError:
+            return []
 
     def set_references(self, references: List[dict]) -> None:
         if references is None:
             self.references = None
         else:
-            self.references = json.dumps(references)
+            # Ensure proper format before serializing
+            formatted_refs = []
+            for ref in references:
+                formatted_ref = {
+                    'title': ref.get('title', ''),
+                    'source': ref.get('source', ref.get('url', '')),
+                    'summary': ref.get('summary', ref.get('content', ''))
+                }
+                formatted_refs.append(formatted_ref)
+            self.references = json.dumps(formatted_refs)
 
 class Article(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

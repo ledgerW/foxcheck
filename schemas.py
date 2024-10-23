@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
 from typing import Optional, List
 from datetime import datetime
+import json
 
 # User schemas
 class UserCreate(BaseModel):
@@ -45,14 +46,24 @@ class StatementCreate(StatementBase):
 class StatementRead(StatementBase):
     id: int
     created_at: datetime
-    article_id: Optional[int]
-    user_id: Optional[int]
+    article_id: int
+    user_id: int
+    references: Optional[List[Reference]] = None
 
     class Config:
         from_attributes = True
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
+
+    @validator('references', pre=True)
+    def parse_references(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return []
+        return v or []
 
 # Article schemas
 class ArticleBase(BaseModel):
