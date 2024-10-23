@@ -11,9 +11,8 @@
 }
 
 .navbar-toggler {
-    display: block !important;
-    padding: 0.5rem;
     border: none;
+    padding: 0.5rem;
 }
 
 .navbar-toggler:focus {
@@ -21,8 +20,14 @@
     box-shadow: none;
 }
 
-.navbar-toggler-icon {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0, 0, 0, 0.5)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+.menu-toggle {
+    padding: 0.5rem;
+    border: none;
+    display: block !important;
+}
+
+.menu-toggle .bi-list {
+    font-size: 1.5rem;
 }
 
 .navbar-nav {
@@ -91,8 +96,12 @@
 }
 
 #logged-in-menu, #logged-out-menu {
-    width: 100%;
-    display: none;  /* Will be controlled by JavaScript */
+    display: none;  /* Initial state */
+}
+
+/* Override Bootstrap's display property */
+#logged-in-menu.show, #logged-out-menu.show {
+    display: block !important;
 }
 
 /* Responsive styles */
@@ -136,4 +145,21 @@
         margin-top: 0.5rem;
         background-color: #f8f9fa;
     }
+}
+
+/* Main content and general layout */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    flex: 1;
+}
+
+.footer {
+    background-color: #f8f9fa;
+    padding: 2rem 0;
+    margin-top: auto;
 }
