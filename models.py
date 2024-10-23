@@ -29,23 +29,26 @@ class Statement(SQLModel, table=True):
             return []
         try:
             return json.loads(self.references) if isinstance(self.references, str) else []
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, TypeError):
             return []
 
     def set_references(self, references: List[dict]) -> None:
         if references is None:
             self.references = None
         else:
-            # Ensure proper format before serializing
-            formatted_refs = []
-            for ref in references:
-                formatted_ref = {
-                    'title': ref.get('title', ''),
-                    'source': ref.get('source', ref.get('url', '')),
-                    'summary': ref.get('summary', ref.get('content', ''))
-                }
-                formatted_refs.append(formatted_ref)
-            self.references = json.dumps(formatted_refs)
+            try:
+                # Ensure each reference has the required fields
+                formatted_refs = []
+                for ref in references:
+                    formatted_ref = {
+                        'title': ref.get('title', ''),
+                        'source': ref.get('source', ''),
+                        'summary': ref.get('summary', '')
+                    }
+                    formatted_refs.append(formatted_ref)
+                self.references = json.dumps(formatted_refs)
+            except (TypeError, ValueError):
+                self.references = None
 
 class Article(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

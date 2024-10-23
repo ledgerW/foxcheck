@@ -33,11 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
             articlesContainer.innerHTML = '';
             articlesContainer.appendChild(loadingSpinner);
 
-            const response = await fetch('/api/articles', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
+            const response = await fetch('/api/articles');
 
             if (!response.ok) {
                 throw new Error(`Failed to load articles: ${response.statusText}`);

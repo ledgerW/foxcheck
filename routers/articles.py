@@ -14,8 +14,7 @@ router = APIRouter(prefix="/api/articles", tags=["articles"])
 async def create_new_article(
     article: ArticleCreate,
     db: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_active_user)
-):
+    current_user: User = Depends(get_current_active_user)):
     return await create_article(db=db, article=article, user_id=current_user.id)
 
 @router.get("", response_model=List[ArticleRead])
@@ -25,11 +24,6 @@ async def read_articles(
     db: AsyncSession = Depends(get_session)
 ):
     articles = await get_articles(db, skip=skip, limit=limit)
-    # Process statements and their references
-    for article in articles:
-        for statement in article.statements:
-            refs = statement.get_references()
-            statement.references = refs
     return articles
 
 @router.get("/{article_id}", response_model=ArticleRead)
@@ -40,12 +34,6 @@ async def read_article(
     article = await get_article(db, article_id=article_id)
     if article is None:
         raise HTTPException(status_code=404, detail="Article not found")
-    
-    # Process statements and their references
-    for statement in article.statements:
-        refs = statement.get_references()
-        statement.references = refs
-    
     return article
 
 @router.put("/{article_id}", response_model=ArticleRead)
@@ -53,8 +41,7 @@ async def update_existing_article(
     article_id: int,
     article_update: ArticleUpdate,
     db: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_active_user)
-):
+    current_user: User = Depends(get_current_active_user)):
     article = await get_article(db, article_id=article_id)
     if article is None:
         raise HTTPException(status_code=404, detail="Article not found")
@@ -66,8 +53,7 @@ async def update_existing_article(
 async def delete_existing_article(
     article_id: int,
     db: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_active_user)
-):
+    current_user: User = Depends(get_current_active_user)):
     article = await get_article(db, article_id=article_id)
     if article is None:
         raise HTTPException(status_code=404, detail="Article not found")

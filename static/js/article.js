@@ -31,11 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadArticle() {
         try {
             loadingSpinner.style.display = 'block';
-            const response = await fetch(`/api/articles/${articleId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
+            const response = await fetch(`/api/articles/${articleId}`);
 
             if (!response.ok) {
                 if (response.status === 404) {
