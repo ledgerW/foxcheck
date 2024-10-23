@@ -72,6 +72,10 @@ async def root(request: Request):
 async def articles_page(request: Request):
     return templates.TemplateResponse("articles.html", {"request": request})
 
+@app.get("/articles/{article_id}")
+async def article_page(request: Request, article_id: int):
+    return templates.TemplateResponse("article.html", {"request": request})
+
 @app.get("/register")
 async def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
