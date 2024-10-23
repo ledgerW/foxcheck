@@ -1,0 +1,165 @@
+INFO:     172.31.196.53:46978 - "GET /static/js/articles.js HTTP/1.1" 304 Not Modified
+ERROR:database:Database session error: 401: Could not validate credentials
+INFO:     172.31.196.53:46978 - "GET /api/auth/status HTTP/1.1" 401 Unauthorized
+2024-10-23 02:22:59,946 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:sqlalchemy.engine.Engine:BEGIN (implicit)
+2024-10-23 02:22:59,950 INFO sqlalchemy.engine.Engine SELECT anon_1.id, anon_1.title, anon_1.text, anon_1.date, anon_1.user_id, anon_1.is_approved, anon_1.domain, anon_1.links, anon_1.authors, anon_1.publication_date, anon_1.extraction_date, user_1.id AS id_1, user_1.username, user_1.email, user_1.hashed_password, user_1.is_active, user_1.created_at, statement_1.id AS id_2, statement_1.content, statement_1.verdict, statement_1.explanation, statement_1."references", statement_1.created_at AS created_at_1, statement_1.article_id, statement_1.user_id AS user_id_1 
+FROM (SELECT article.id AS id, article.title AS title, article.text AS text, article.date AS date, article.user_id AS user_id, article.is_approved AS is_approved, article.domain AS domain, article.links AS links, article.authors AS authors, article.publication_date AS publication_date, article.extraction_date AS extraction_date 
+FROM article 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER) AS anon_1 LEFT OUTER JOIN "user" AS user_1 ON user_1.id = anon_1.user_id LEFT OUTER JOIN statement AS statement_1 ON anon_1.id = statement_1.article_id
+INFO:sqlalchemy.engine.Engine:SELECT anon_1.id, anon_1.title, anon_1.text, anon_1.date, anon_1.user_id, anon_1.is_approved, anon_1.domain, anon_1.links, anon_1.authors, anon_1.publication_date, anon_1.extraction_date, user_1.id AS id_1, user_1.username, user_1.email, user_1.hashed_password, user_1.is_active, user_1.created_at, statement_1.id AS id_2, statement_1.content, statement_1.verdict, statement_1.explanation, statement_1."references", statement_1.created_at AS created_at_1, statement_1.article_id, statement_1.user_id AS user_id_1 
+FROM (SELECT article.id AS id, article.title AS title, article.text AS text, article.date AS date, article.user_id AS user_id, article.is_approved AS is_approved, article.domain AS domain, article.links AS links, article.authors AS authors, article.publication_date AS publication_date, article.extraction_date AS extraction_date 
+FROM article 
+ LIMIT $1::INTEGER OFFSET $2::INTEGER) AS anon_1 LEFT OUTER JOIN "user" AS user_1 ON user_1.id = anon_1.user_id LEFT OUTER JOIN statement AS statement_1 ON anon_1.id = statement_1.article_id
+2024-10-23 02:22:59,951 INFO sqlalchemy.engine.Engine [generated in 0.00016s] (100, 0)
+INFO:sqlalchemy.engine.Engine:[generated in 0.00016s] (100, 0)
+2024-10-23 02:23:00,164 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:sqlalchemy.engine.Engine:ROLLBACK
+ERROR:database:Database session error: 2 validation errors:
+  {'type': 'missing', 'loc': ('response', 0, 'is_active'), 'msg': 'Field required', 'input': Article()}
+  {'type': 'list_type', 'loc': ('response', 0, 'statements', 0, 'references'), 'msg': 'Input should be a valid list', 'input': '[{"url": "https://climate-science.org/ocean-study-2024", "title": "Ocean Level Study 2024", "content": "Comprehensive analysis of global sea level changes", "context": "Primary research paper"}]'}
+
+INFO:     172.31.196.53:46978 - "GET /api/articles HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
+  |     yield
+  |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/base.py", line 190, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 763, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 408, in run_asgi
+    |     result = await app(  # type: ignore[func-returns-value]
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
+    |     return await self.app(scope, receive, send)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/fastapi/applications.py", line 1054, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/applications.py", line 123, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/base.py", line 189, in __call__
+    |     with collapse_excgroups():
+    |   File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/contextlib.py", line 158, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/_utils.py", line 93, in collapse_excgroups
+    |     raise exc
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/runner/AsyncFastAPIChain/main.py", line 23, in dispatch
+    |     response = await call_next(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/base.py", line 165, in call_next
+    |     raise app_exc
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/base.py", line 151, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/trustedhost.py", line 36, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 65, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
+    |     raise exc
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/routing.py", line 756, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/routing.py", line 776, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/routing.py", line 297, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/routing.py", line 77, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
+    |     raise exc
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/routing.py", line 72, in app
+    |     response = await func(request)
+    |                ^^^^^^^^^^^^^^^^^^^
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/fastapi/routing.py", line 327, in app
+    |     content = await serialize_response(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/fastapi/routing.py", line 176, in serialize_response
+    |     raise ResponseValidationError(
+    | fastapi.exceptions.ResponseValidationError: 2 validation errors:
+    |   {'type': 'missing', 'loc': ('response', 0, 'is_active'), 'msg': 'Field required', 'input': Article()}
+    |   {'type': 'list_type', 'loc': ('response', 0, 'statements', 0, 'references'), 'msg': 'Input should be a valid list', 'input': '[{"url": "https://climate-science.org/ocean-study-2024", "title": "Ocean Level Study 2024", "content": "Comprehensive analysis of global sea level changes", "context": "Primary research paper"}]'}
+    | 
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 408, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/applications.py", line 123, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/base.py", line 189, in __call__
+    with collapse_excgroups():
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/_utils.py", line 93, in collapse_excgroups
+    raise exc
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/base.py", line 191, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AsyncFastAPIChain/main.py", line 23, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/base.py", line 165, in call_next
+    raise app_exc
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/base.py", line 151, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/trustedhost.py", line 36, in __call__
+    await self.app(scope, receive, send)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 65, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/routing.py", line 756, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/routing.py", line 776, in app
+    await route.handle(scope, receive, send)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/routing.py", line 297, in handle
+    await self.app(scope, receive, send)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/routing.py", line 77, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/starlette/routing.py", line 72, in app
+    response = await func(request)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/fastapi/routing.py", line 327, in app
+    content = await serialize_response(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/AsyncFastAPIChain/.pythonlibs/lib/python3.11/site-packages/fastapi/routing.py", line 176, in serialize_response
+    raise ResponseValidationError(
+fastapi.exceptions.ResponseValidationError: 2 validation errors:
+  {'type': 'missing', 'loc': ('response', 0, 'is_active'), 'msg': 'Field required', 'input': Article()}
+  {'type': 'list_type', 'loc': ('response', 0, 'statements', 0, 'references'), 'msg': 'Input should be a valid list', 'input': '[{"url": "https://climate-science.org/ocean-study-2024", "title": "Ocean Level Study 2024", "content": "Comprehensive analysis of global sea level changes", "context": "Primary research paper"}]'}

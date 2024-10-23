@@ -49,6 +49,12 @@ class StatementRead(StatementBase):
     article_id: Optional[int]
     user_id: Optional[int]
 
+    class Config:
+        from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+
 # Article schemas
 class ArticleBase(BaseModel):
     title: str
@@ -64,10 +70,16 @@ class ArticleRead(ArticleBase):
     id: int
     date: datetime
     user_id: int
-    is_active: bool
-    extraction_date: datetime
+    is_active: bool = True
+    extraction_date: Optional[datetime] = None
     statements: List[StatementRead] = []
     links: Optional[List[str]] = None
+
+    class Config:
+        from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
 
 class ArticleUpdate(BaseModel):
     title: Optional[str] = None
@@ -75,5 +87,5 @@ class ArticleUpdate(BaseModel):
     domain: Optional[str] = None
     authors: Optional[str] = None
     publication_date: Optional[datetime] = None
-    is_approved: Optional[bool] = None
+    is_active: Optional[bool] = None
     links: Optional[List[str]] = None

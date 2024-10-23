@@ -28,15 +28,29 @@ class Statement(SQLModel, table=True):
         """Get the list of references from JSON string"""
         if not self.references:
             return []
-        return json.loads(self.references)
+        try:
+            if isinstance(self.references, str):
+                return json.loads(self.references)
+            elif isinstance(self.references, list):
+                return self.references
+            return []
+        except json.JSONDecodeError:
+            return []
 
     def set_references(self, references: List[dict]) -> None:
         """Set references as JSON string"""
-        self.references = json.dumps(references) if references else None
-
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {datetime: str}
+        if references is None:
+            self.references = None
+        else:
+            if isinstance(references, str):
+                try:
+                    # Verify it's a valid JSON string
+                    json.loads(references)
+                    self.references = references
+                except json.JSONDecodeError:
+                    self.references = None
+            else:
+                self.references = json.dumps(references)
 
 class Article(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -44,9 +58,9 @@ class Article(SQLModel, table=True):
     text: str
     date: datetime = Field(default_factory=datetime.utcnow)
     user_id: int = Field(foreign_key="user.id")
-    is_approved: bool = Field(default=False)
+    is_active: bool = Field(default=True)
     domain: Optional[str] = Field(max_length=500)
-    links: Optional[str]  # Stores JSON
+    links: Optional[str] = Field(default=None)  # Stores JSON
     authors: Optional[str] = Field(max_length=1000)
     publication_date: Optional[datetime]
     extraction_date: datetime = Field(default_factory=datetime.utcnow)
@@ -54,12 +68,30 @@ class Article(SQLModel, table=True):
     user: Optional[User] = Relationship(back_populates="articles")
     statements: List[Statement] = Relationship(back_populates="article")
 
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {datetime: str}
-
     def set_links(self, links: List[str]) -> None:
-        self.links = json.dumps(links)
+        """Set links as JSON string"""
+        if links is None:
+            self.links = None
+        else:
+            if isinstance(links, str):
+                try:
+                    # Verify it's a valid JSON string
+                    json.loads(links)
+                    self.links = links
+                except json.JSONDecodeError:
+                    self.links = None
+            else:
+                self.links = json.dumps(links)
 
     def get_links(self) -> List[str]:
-        return json.loads(self.links) if self.links else []
+        """Get the list of links from JSON string"""
+        if not self.links:
+            return []
+        try:
+            if isinstance(self.links, str):
+                return json.loads(self.links)
+            elif isinstance(self.links, list):
+                return self.links
+            return []
+        except json.JSONDecodeError:
+            return []

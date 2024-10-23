@@ -6,6 +6,7 @@ from schemas import ArticleCreate, ArticleRead, ArticleUpdate
 from models import User, Article
 from crud import create_article, get_article, get_articles, update_article, delete_article
 from auth import get_current_active_user
+import json
 
 router = APIRouter(prefix="/api/articles", tags=["articles"])
 
@@ -24,6 +25,16 @@ async def read_articles(
     db: AsyncSession = Depends(get_session)
 ):
     articles = await get_articles(db, skip=skip, limit=limit)
+    # Process statements and their references
+    for article in articles:
+        for statement in article.statements:
+            refs = statement.get_references()
+            if isinstance(refs, str):
+                try:
+                    refs = json.loads(refs)
+                except json.JSONDecodeError:
+                    refs = []
+            statement.references = refs
     return articles
 
 @router.get("/{article_id}", response_model=ArticleRead)
@@ -34,6 +45,17 @@ async def read_article(
     article = await get_article(db, article_id=article_id)
     if article is None:
         raise HTTPException(status_code=404, detail="Article not found")
+    
+    # Process statements and their references
+    for statement in article.statements:
+        refs = statement.get_references()
+        if isinstance(refs, str):
+            try:
+                refs = json.loads(refs)
+            except json.JSONDecodeError:
+                refs = []
+        statement.references = refs
+    
     return article
 
 @router.put("/{article_id}", response_model=ArticleRead)
