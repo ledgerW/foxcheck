@@ -11,9 +11,9 @@
 }
 
 .navbar-toggler {
-    border: none;
+    display: block !important;
     padding: 0.5rem;
-    transition: all 0.3s ease;
+    border: none;
 }
 
 .navbar-toggler:focus {
@@ -88,6 +88,11 @@
 
 .dropdown-divider {
     margin: 0.5rem 0;
+}
+
+#logged-in-menu, #logged-out-menu {
+    width: 100%;
+    display: none;  /* Will be controlled by JavaScript */
 }
 
 /* Responsive styles */

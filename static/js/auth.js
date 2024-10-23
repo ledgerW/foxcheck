@@ -123,20 +123,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateUIForLoggedInState(username) {
-        if (loggedOutMenu) loggedOutMenu.style.display = 'none';
-        if (loggedInMenu) loggedInMenu.style.display = 'block';
-        if (usernameDisplay) usernameDisplay.textContent = username;
+        if (loggedOutMenu) {
+            loggedOutMenu.style.display = 'none';
+        }
+        if (loggedInMenu) {
+            loggedInMenu.style.display = 'block';
+        }
+        if (usernameDisplay) {
+            usernameDisplay.textContent = username;
+        }
     }
 
     function updateUIForLoggedOutState() {
-        if (loggedOutMenu) loggedOutMenu.style.display = 'block';
-        if (loggedInMenu) loggedInMenu.style.display = 'none';
-        if (usernameDisplay) usernameDisplay.textContent = '';
+        if (loggedOutMenu) {
+            loggedOutMenu.style.display = 'block';
+        }
+        if (loggedInMenu) {
+            loggedInMenu.style.display = 'none';
+        }
+        if (usernameDisplay) {
+            usernameDisplay.textContent = '';
+        }
     }
 
     // Initial auth status check
     checkAuthStatus();
 });
-
-// Export functions for use in other scripts
-window.handleLogout = handleLogout;
