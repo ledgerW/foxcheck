@@ -6,11 +6,14 @@
     <title>Statement Checker</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/main.css" rel="stylesheet">
     <style>
         body {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
         }
         .main-content {
             flex: 1;
@@ -20,15 +23,11 @@
             border: none;
             background-color: white;
             margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .article-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-        }
-        .footer {
-            background-color: #f8f9fa;
-            padding: 2rem 0;
-            margin-top: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .navbar-toggler {
             border: none;

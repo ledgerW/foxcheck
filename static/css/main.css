@@ -138,7 +138,8 @@ body {
 }
 
 .footer {
-    background-color: #f8f9fa;
+    background-color: white;
     padding: 2rem 0;
     margin-top: auto;
+    box-shadow: -2px -2px 4px rgba(0,0,0,0.1);
 }
