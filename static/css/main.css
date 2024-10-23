@@ -20,21 +20,6 @@ body {
     z-index: 1000;
 }
 
-/* Main content */
-.main-content {
-    flex: 1;
-    padding: 2rem 0;
-    max-width: 1200px;
-    margin: 0 auto;
-    width: 100%;
-}
-
-/* Container styles */
-.container {
-    max-width: 1200px;
-    padding: 0 1rem;
-}
-
 /* Navbar components */
 .navbar-brand {
     font-weight: 600;
@@ -44,8 +29,8 @@ body {
 .navbar-toggler {
     border: none;
     padding: 0.5rem;
+    background: none;
     transition: transform 0.2s;
-    margin-left: 0.5rem;
 }
 
 .navbar-toggler:focus {
@@ -55,17 +40,11 @@ body {
 
 .navbar-toggler .bi-list {
     font-size: 1.5rem;
-    transition: transform 0.2s;
-}
-
-.navbar-toggler[aria-expanded="true"] .bi-list {
-    transform: rotate(90deg);
 }
 
 /* Navigation links */
 .navbar-nav {
-    margin: 0;
-    padding: 1rem 0;
+    margin-right: auto;
 }
 
 .nav-link {
@@ -81,11 +60,7 @@ body {
     background-color: rgba(52, 152, 219, 0.1);
 }
 
-/* User menu dropdown */
-.user-menu {
-    margin-left: auto;
-}
-
+/* Dropdown styling */
 .dropdown-toggle {
     padding: 0.5rem;
     border: none;
@@ -94,32 +69,36 @@ body {
     align-items: center;
 }
 
-.dropdown-toggle:hover,
-.dropdown-toggle:focus {
-    background: none;
-    box-shadow: none;
+.dropdown-toggle .bi-list {
+    font-size: 1.5rem;
 }
 
 .dropdown-toggle::after {
     display: none;
 }
 
-.dropdown-toggle .bi {
-    font-size: 1.2rem;
-}
-
 .dropdown-menu {
-    border: none;
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #ffffff;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     border-radius: 8px;
     padding: 0.5rem;
     min-width: 200px;
 }
 
+.dropdown-menu.show {
+    display: block !important;
+}
+
+#logged-in-menu, #logged-out-menu {
+    width: 100%;
+}
+
 .dropdown-item {
     padding: 0.75rem 1rem;
     border-radius: 4px;
-    color: #2c3e50;
     transition: all 0.2s ease;
 }
 
@@ -128,35 +107,19 @@ body {
     color: #3498db;
 }
 
-/* Card styles */
-.article-card {
-    background-color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
-    margin-bottom: 1.5rem;
-    padding: 1.5rem;
-}
-
-.article-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-}
-
 /* Mobile menu styles */
 @media (max-width: 991.98px) {
     .navbar-collapse {
         position: fixed;
         top: 72px;
         left: 0;
-        padding: 1rem;
         width: 100%;
         height: calc(100vh - 72px);
         background-color: #ffffff;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        padding: 1rem;
         transform: translateX(-100%);
         transition: transform 0.3s ease-in-out;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         overflow-y: auto;
         z-index: 1000;
     }
@@ -166,49 +129,37 @@ body {
     }
 
     .navbar-nav {
-        padding: 1rem 0;
+        margin-bottom: 1rem;
     }
 
     .nav-link {
         padding: 1rem !important;
-        border-radius: 8px;
     }
 
     .dropdown-menu {
         position: static !important;
-        width: 100%;
-        margin-top: 0.5rem;
         box-shadow: none;
-        background-color: rgba(52, 152, 219, 0.05);
-    }
-
-    .mobile-user-menu {
-        margin-left: auto;
-        display: flex;
-        align-items: center;
+        border: 1px solid rgba(0,0,0,0.1);
+        margin-top: 0.5rem;
     }
 }
 
-/* Additional page components */
-.page-header {
-    background-color: #ffffff;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
+/* Main content and other existing styles */
+.main-content {
+    flex: 1;
     padding: 2rem 0;
 }
 
-.content-container {
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    padding: 2rem;
-    margin: 2rem 0;
+.container {
+    max-width: 1200px;
+    padding: 0 1rem;
+    margin: 0 auto;
 }
 
 /* Footer */
 .footer {
-    padding: 2rem 0;
     margin-top: auto;
+    padding: 2rem 0;
     background-color: #ffffff;
     border-top: 1px solid rgba(0,0,0,0.1);
 }
