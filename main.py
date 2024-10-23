@@ -75,46 +75,6 @@ async def register_page(request: Request):
 async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
-class StatementRequest(BaseModel):
-    statement: str = Field(..., min_length=1, max_length=1000, description="The statement to be checked")
-
-class Reference(BaseModel):
-    title: str
-    source_url: str
-    summary: str
-
-class StatementResponse(BaseModel):
-    verdict: str
-    explanation: str
-    references: List[Reference]
-
-@app.post("/api/check_statement", response_model=StatementResponse)
-@limiter.limit("10/minute")
-async def check_statement(request: StatementRequest, current_user: dict = Depends(get_current_active_user)):
-    try:
-        # For demonstration purposes, we'll return a mock result.
-        mock_result = StatementResponse(
-            verdict="Partially True",
-            explanation=f"The statement '{request.statement}' is partially true based on our analysis.",
-            references=[
-                Reference(
-                    title="Fact-Checking Source 1",
-                    source_url="https://example.com/fact-check1",
-                    summary="This source provides context for part of the statement."
-                ),
-                Reference(
-                    title="Fact-Checking Source 2",
-                    source_url="https://example.com/fact-check2",
-                    summary="This source contradicts a portion of the statement."
-                )
-            ]
-        )
-        return mock_result
-    except ValueError as ve:
-        raise HTTPException(status_code=422, detail=f"Invalid input: {str(ve)}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
-
 @app.get("/api/auth/status")
 async def auth_status(current_user: dict = Depends(get_current_active_user)):
     return {"authenticated": True, "username": current_user.username}

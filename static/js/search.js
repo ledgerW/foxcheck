@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <ul>
                         ${result.references.map(ref => `
                             <li>
-                                <a href="${ref.source_url}" target="_blank">${ref.title}</a>
+                                <a href="${ref.source}" target="_blank">${ref.title}</a>
                                 <p>${ref.summary}</p>
                             </li>
                         `).join('')}
