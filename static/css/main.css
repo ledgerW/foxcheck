@@ -4,6 +4,7 @@ body {
     display: flex;
     flex-direction: column;
     background-color: #f8f9fa;
+    overflow-x: hidden;
 }
 
 /* Header and footer */
@@ -120,11 +121,12 @@ body {
         padding-right: 1rem;
         padding-bottom: 1rem;
         width: 100%;
-        height: auto;
+        height: calc(100vh - 72px);
         background-color: #ffffff;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         transition: transform 0.3s ease-in-out;
         transform: translateY(-100%);
+        overflow-y: auto;
     }
 
     .navbar-collapse.show {
@@ -187,12 +189,112 @@ body {
     box-shadow: 0 8px 16px rgba(0,0,0,0.1);
 }
 
+/* Sidebar styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background-color: white;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    transition: right 0.3s ease-in-out;
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.sidebar.open {
+    right: 0;
+}
+
+.sidebar-toggle {
+    position: fixed;
+    right: 20px;
+    top: 80px;
+    z-index: 1001;
+    transition: right 0.3s ease-in-out;
+}
+
+.sidebar-toggle.open {
+    right: 420px;
+}
+
+/* Statement card styles */
+.statement-card {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.statement-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.statement-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    padding: 0 1rem;
+}
+
+.statement-content.expanded {
+    max-height: 2000px;
+    transition: max-height 0.8s ease-in;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Responsive sidebar */
+@media (max-width: 991.98px) {
+    .sidebar {
+        width: 100%;
+        right: -100%;
+    }
+    
+    .content.sidebar-open {
+        margin-right: 0;
+    }
+    
+    .sidebar-toggle.open {
+        right: 20px;
+    }
+}
+
 /* Footer */
 .footer {
     background-color: #ffffff;
     padding: 2rem 0;
     margin-top: auto;
     border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Search styles */
+.search-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding-top: 10vh;
+}
+
+.search-input-container {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+#search-input {
+    border-radius: 24px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+#search-button {
+    border-radius: 24px;
 }
 
 /* Utility classes */
