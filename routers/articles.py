@@ -28,7 +28,8 @@ async def read_articles(
     # Process statements and their references
     for article in articles:
         for statement in article.statements:
-            statement.references = statement.get_references()
+            refs = statement.get_references()
+            statement.references = refs
     return articles
 
 @router.get("/{article_id}", response_model=ArticleRead)
@@ -42,7 +43,8 @@ async def read_article(
     
     # Process statements and their references
     for statement in article.statements:
-        statement.references = statement.get_references()
+        refs = statement.get_references()
+        statement.references = refs
     
     return article
 

@@ -25,40 +25,20 @@ class Statement(SQLModel, table=True):
     article: Optional["Article"] = Relationship(back_populates="statements")
 
     def get_references(self) -> List[dict]:
-        """Get the list of references from JSON string"""
         if not self.references:
             return []
-        try:
-            if isinstance(self.references, str):
-                refs = json.loads(self.references)
-                if isinstance(refs, list):
-                    return [
-                        {
-                            'title': ref.get('title'),
-                            'source': ref.get('source', ref.get('url')),
-                            'summary': ref.get('summary', ref.get('content'))
-                        }
-                        for ref in refs
-                    ]
-            return []
-        except json.JSONDecodeError:
-            return []
+        if isinstance(self.references, str):
+            try:
+                return json.loads(self.references)
+            except json.JSONDecodeError:
+                return []
+        return []
 
     def set_references(self, references: List[dict]) -> None:
-        """Set references as JSON string with standardized format"""
         if references is None:
             self.references = None
         else:
-            # Validate and transform references to correct format
-            formatted_refs = []
-            for ref in references:
-                formatted_ref = {
-                    'title': ref.get('title'),
-                    'source': ref.get('source', ref.get('url')),  # fallback to url if source not present
-                    'summary': ref.get('summary', ref.get('content'))  # fallback to content if summary not present
-                }
-                formatted_refs.append(formatted_ref)
-            self.references = json.dumps(formatted_refs)
+            self.references = json.dumps(references)
 
 class Article(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
