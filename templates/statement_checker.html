@@ -15,27 +15,30 @@
         .main-content {
             flex: 1;
         }
-        .article-card {
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: none;
-            background-color: white;
-            margin-bottom: 1.5rem;
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-top: 10vh;
         }
-        .article-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        .search-input-container {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        #search-input {
+            border-radius: 24px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        #search-button {
+            border-radius: 24px;
+        }
+        .spinner-border {
+            display: none;
         }
         .footer {
             background-color: #f8f9fa;
             padding: 2rem 0;
             margin-top: auto;
-        }
-        .navbar-toggler {
-            border: none;
-        }
-        .loading-spinner {
-            display: none;
-            margin: 2rem auto;
         }
         @media (max-width: 768px) {
             .navbar-collapse {
@@ -57,10 +60,10 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="/">Home</a>
+                        <a class="nav-link" href="/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/statement_checker">Statement Checker</a>
+                        <a class="nav-link active" href="/statement_checker">Statement Checker</a>
                     </li>
                 </ul>
                 <div class="d-flex">
@@ -76,22 +79,21 @@
         </div>
     </nav>
 
-    <div class="main-content container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Latest Articles</h1>
-            <button id="new-article-btn" class="btn btn-primary" style="display: none;">
-                <i class="bi bi-plus-lg"></i> New Article
-            </button>
-        </div>
-
-        <div class="loading-spinner text-center">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
+    <div class="main-content container">
+        <div class="search-container">
+            <h1 class="text-center mb-4">Check Any Statement</h1>
+            <div class="search-input-container">
+                <div class="input-group mb-3">
+                    <input type="text" id="search-input" class="form-control form-control-lg" placeholder="Enter a statement to check">
+                    <button class="btn btn-primary btn-lg" type="button" id="search-button">Check</button>
+                </div>
             </div>
-        </div>
-
-        <div id="articles-container">
-            <!-- Articles will be loaded here -->
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status" id="loading-spinner">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="search-results"></div>
         </div>
     </div>
 
@@ -126,6 +128,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/auth.js"></script>
-    <script src="/static/js/articles.js"></script>
+    <script src="/static/js/search.js"></script>
 </body>
 </html>

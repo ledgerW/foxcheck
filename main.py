@@ -68,9 +68,10 @@ async def on_startup():
 async def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-@app.get("/articles")
-async def articles_page(request: Request):
-    return templates.TemplateResponse("articles.html", {"request": request})
+@app.get("/statement_checker")
+@limiter.limit("20/minute")
+async def statement_checker(request: Request):
+    return templates.TemplateResponse("statement_checker.html", {"request": request})
 
 @app.get("/articles/{article_id}")
 async def article_page(request: Request, article_id: int):

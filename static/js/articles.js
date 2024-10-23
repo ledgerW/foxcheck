@@ -1,13 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const articlesContainer = document.getElementById('articles-container');
     const newArticleBtn = document.getElementById('new-article-btn');
-    const loadingSpinner = document.createElement('div');
-    loadingSpinner.className = 'text-center my-4';
-    loadingSpinner.innerHTML = `
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading articles...</span>
-        </div>
-    `;
+    const loadingSpinner = document.querySelector('.loading-spinner');
     
     async function checkAuthAndUpdateUI() {
         try {
@@ -30,8 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadArticles() {
         try {
-            articlesContainer.innerHTML = '';
-            articlesContainer.appendChild(loadingSpinner);
+            loadingSpinner.style.display = 'block';
 
             const response = await fetch('/api/articles');
 
@@ -44,9 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             displayError(error.message);
         } finally {
-            if (articlesContainer.contains(loadingSpinner)) {
-                articlesContainer.removeChild(loadingSpinner);
-            }
+            loadingSpinner.style.display = 'none';
         }
     }
 
@@ -61,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return new Date(dateString).toLocaleDateString(undefined, options);
     }
 
-    function truncateText(text, maxLength = 200) {
+    function truncateText(text, maxLength = 300) {
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength - 3) + '...';
     }
@@ -69,30 +60,33 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayArticles(articles) {
         if (!articles.length) {
             articlesContainer.innerHTML = `
-                <div class="col-12">
-                    <div class="alert alert-info">
-                        No articles found. Be the first to create one!
-                    </div>
+                <div class="alert alert-info">
+                    No articles found. Be the first to create one!
                 </div>`;
             return;
         }
 
         articlesContainer.innerHTML = articles.map(article => `
-            <div class="col-md-6 mb-4">
-                <div class="card article-card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">${article.title}</h5>
-                        <p class="card-text text-muted mb-3">
-                            ${article.authors ? `By ${article.authors} • ` : ''}
-                            ${formatDate(article.date)}
-                        </p>
-                        <p class="card-text mb-4">${truncateText(article.text)}</p>
-                        <div class="d-flex justify-content-between align-items-center mt-auto">
-                            ${article.domain ? `
-                                <small class="text-muted">Source: ${article.domain}</small>
+            <div class="card article-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h2 class="card-title h4">${article.title}</h2>
+                        <small class="text-muted">${article.domain || ''}</small>
+                    </div>
+                    <div class="text-muted mb-3">
+                        ${article.authors ? `By ${article.authors} • ` : ''}
+                        ${formatDate(article.date)}
+                    </div>
+                    <p class="card-text mb-4">${truncateText(article.text)}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            ${article.statements ? `
+                                <span class="badge bg-secondary me-2">
+                                    ${article.statements.length} Statements
+                                </span>
                             ` : ''}
-                            <a href="/articles/${article.id}" class="btn btn-outline-primary">Read More</a>
                         </div>
+                        <a href="/articles/${article.id}" class="btn btn-outline-primary">Read More</a>
                     </div>
                 </div>
             </div>
@@ -101,11 +95,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function displayError(message) {
         articlesContainer.innerHTML = `
-            <div class="col-12">
-                <div class="alert alert-danger">
-                    <h5 class="alert-heading">Error loading articles</h5>
-                    <p class="mb-0">${message}</p>
-                </div>
+            <div class="alert alert-danger">
+                <h5 class="alert-heading">Error loading articles</h5>
+                <p class="mb-0">${message}</p>
             </div>`;
     }
 
@@ -113,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadArticles();
 
     newArticleBtn.addEventListener('click', () => {
-        // TODO: Implement new article creation
         alert('New article creation will be implemented in the next phase');
     });
 });
