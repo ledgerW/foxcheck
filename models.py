@@ -30,27 +30,35 @@ class Statement(SQLModel, table=True):
             return []
         try:
             if isinstance(self.references, str):
-                return json.loads(self.references)
-            elif isinstance(self.references, list):
-                return self.references
+                refs = json.loads(self.references)
+                if isinstance(refs, list):
+                    return [
+                        {
+                            'title': ref.get('title'),
+                            'source': ref.get('source', ref.get('url')),
+                            'summary': ref.get('summary', ref.get('content'))
+                        }
+                        for ref in refs
+                    ]
             return []
         except json.JSONDecodeError:
             return []
 
     def set_references(self, references: List[dict]) -> None:
-        """Set references as JSON string"""
+        """Set references as JSON string with standardized format"""
         if references is None:
             self.references = None
         else:
-            if isinstance(references, str):
-                try:
-                    # Verify it's a valid JSON string
-                    json.loads(references)
-                    self.references = references
-                except json.JSONDecodeError:
-                    self.references = None
-            else:
-                self.references = json.dumps(references)
+            # Validate and transform references to correct format
+            formatted_refs = []
+            for ref in references:
+                formatted_ref = {
+                    'title': ref.get('title'),
+                    'source': ref.get('source', ref.get('url')),  # fallback to url if source not present
+                    'summary': ref.get('summary', ref.get('content'))  # fallback to content if summary not present
+                }
+                formatted_refs.append(formatted_ref)
+            self.references = json.dumps(formatted_refs)
 
 class Article(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

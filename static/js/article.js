@@ -112,16 +112,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ${statement.references.map(reference => `
                                     <div class="reference-item">
                                         <h6>
-                                            <a href="${reference.url}" target="_blank">
-                                                ${reference.title || reference.url}
+                                            <a href="${reference.source}" target="_blank">
+                                                ${reference.title || 'Source Link'}
                                             </a>
                                         </h6>
-                                        <p>${reference.content}</p>
-                                        ${reference.context ? `
-                                            <p class="context text-muted">
-                                                <small>${reference.context}</small>
-                                            </p>
-                                        ` : ''}
+                                        <p>${reference.summary}</p>
                                     </div>
                                 `).join('')}
                             </div>

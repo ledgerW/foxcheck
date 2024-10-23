@@ -28,10 +28,9 @@ class TokenData(BaseModel):
 
 # Reference schema (used within Statement)
 class Reference(BaseModel):
-    url: str
     title: Optional[str] = None
-    content: str
-    context: Optional[str] = None
+    source: str
+    summary: str
 
 # Statement schemas
 class StatementBase(BaseModel):

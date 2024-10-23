@@ -103,10 +103,9 @@ async def seed_sample_articles(session: AsyncSession):
                         "explanation": "This statement is supported by multiple scientific studies.",
                         "references": [
                             {
-                                "url": "https://climate-science.org/ocean-study-2024",
-                                "title": "Ocean Level Study 2024",
-                                "content": "Comprehensive analysis of global sea level changes",
-                                "context": "Primary research paper"
+                                'title': 'Ocean Level Study 2024',
+                                'source': 'https://climate-science.org/ocean-study-2024',
+                                'summary': 'Comprehensive analysis of global sea level changes'
                             }
                         ]
                     }

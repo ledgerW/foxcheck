@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from database import get_session
-from schemas import ArticleCreate, ArticleRead, ArticleUpdate
+from schemas import ArticleCreate, ArticleRead, ArticleUpdate, Reference
 from models import User, Article
 from crud import create_article, get_article, get_articles, update_article, delete_article
 from auth import get_current_active_user
@@ -28,13 +28,7 @@ async def read_articles(
     # Process statements and their references
     for article in articles:
         for statement in article.statements:
-            refs = statement.get_references()
-            if isinstance(refs, str):
-                try:
-                    refs = json.loads(refs)
-                except json.JSONDecodeError:
-                    refs = []
-            statement.references = refs
+            statement.references = statement.get_references()
     return articles
 
 @router.get("/{article_id}", response_model=ArticleRead)
@@ -48,13 +42,7 @@ async def read_article(
     
     # Process statements and their references
     for statement in article.statements:
-        refs = statement.get_references()
-        if isinstance(refs, str):
-            try:
-                refs = json.loads(refs)
-            except json.JSONDecodeError:
-                refs = []
-        statement.references = refs
+        statement.references = statement.get_references()
     
     return article
 
