@@ -86,54 +86,49 @@ document.addEventListener('DOMContentLoaded', () => {
         // Display content
         document.getElementById('article-content').textContent = article.text;
         
-        // Display statements with their associated references
+        // Display statements with their references
         const statementsContainer = document.getElementById('statements-container');
         if (article.statements && article.statements.length > 0) {
-            const statementsHtml = article.statements.map((statement, index) => {
-                // Find references associated with this statement
-                const statementRefs = article.references.filter(ref => ref.statement_id === statement.id);
-                
-                return `
-                    <div class="statement-card">
-                        <div class="statement-header" onclick="toggleStatement(${index})">
-                            <span class="statement-text">${statement.content}</span>
-                            <i id="statement-icon-${index}" class="bi bi-chevron-right"></i>
-                        </div>
-                        <div id="statement-content-${index}" class="statement-content">
-                            ${statement.verdict ? `
-                                <div class="verdict mb-3">
-                                    <strong>Verdict:</strong> ${statement.verdict}
-                                </div>
-                            ` : ''}
-                            ${statement.explanation ? `
-                                <div class="explanation mb-3">
-                                    <strong>Explanation:</strong> ${statement.explanation}
-                                </div>
-                            ` : ''}
-                            ${statementRefs.length > 0 ? `
-                                <div class="statement-references">
-                                    <h5>References</h5>
-                                    ${statementRefs.map(reference => `
-                                        <div class="reference-item">
-                                            <h6 class="mb-2">
-                                                <a href="${reference.url}" target="_blank" class="text-primary">
-                                                    ${reference.title || reference.url}
-                                                </a>
-                                            </h6>
-                                            ${reference.content ? `
-                                                <p class="mb-2">${reference.content}</p>
-                                            ` : ''}
-                                            ${reference.context ? `
-                                                <p class="text-muted mb-0"><small>${reference.context}</small></p>
-                                            ` : ''}
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            ` : ''}
-                        </div>
+            const statementsHtml = article.statements.map((statement, index) => `
+                <div class="statement-card">
+                    <div class="statement-header" onclick="toggleStatement(${index})">
+                        <span class="statement-text">${statement.content}</span>
+                        <i id="statement-icon-${index}" class="bi bi-chevron-right"></i>
                     </div>
-                `;
-            }).join('');
+                    <div id="statement-content-${index}" class="statement-content">
+                        ${statement.verdict ? `
+                            <div class="verdict mb-3">
+                                <strong>Verdict:</strong> ${statement.verdict}
+                            </div>
+                        ` : ''}
+                        ${statement.explanation ? `
+                            <div class="explanation mb-3">
+                                <strong>Explanation:</strong> ${statement.explanation}
+                            </div>
+                        ` : ''}
+                        ${statement.references && statement.references.length > 0 ? `
+                            <div class="references">
+                                <h5>References</h5>
+                                ${statement.references.map(reference => `
+                                    <div class="reference-item">
+                                        <h6>
+                                            <a href="${reference.url}" target="_blank">
+                                                ${reference.title || reference.url}
+                                            </a>
+                                        </h6>
+                                        <p>${reference.content}</p>
+                                        ${reference.context ? `
+                                            <p class="context text-muted">
+                                                <small>${reference.context}</small>
+                                            </p>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
             statementsContainer.innerHTML = statementsHtml;
         } else {
             statementsContainer.innerHTML = '<p>No statements available for this article.</p>';
