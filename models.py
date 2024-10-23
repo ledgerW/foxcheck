@@ -17,12 +17,22 @@ class Statement(SQLModel, table=True):
     content: str = Field(index=True)
     verdict: Optional[str] = Field(default=None)
     explanation: Optional[str] = Field(default=None)
+    references: Optional[str] = Field(default=None)  # Stores JSON list of references
     created_at: datetime = Field(default_factory=datetime.utcnow)
     article_id: Optional[int] = Field(default=None, foreign_key="article.id")
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
     
     article: Optional["Article"] = Relationship(back_populates="statements")
-    references: List["Reference"] = Relationship(back_populates="statement")
+
+    def get_references(self) -> List[dict]:
+        """Get the list of references from JSON string"""
+        if not self.references:
+            return []
+        return json.loads(self.references)
+
+    def set_references(self, references: List[dict]) -> None:
+        """Set references as JSON string"""
+        self.references = json.dumps(references) if references else None
 
     class Config:
         arbitrary_types_allowed = True
@@ -43,7 +53,6 @@ class Article(SQLModel, table=True):
     
     user: Optional[User] = Relationship(back_populates="articles")
     statements: List[Statement] = Relationship(back_populates="article")
-    references: List["Reference"] = Relationship(back_populates="article")
 
     class Config:
         arbitrary_types_allowed = True
@@ -54,18 +63,3 @@ class Article(SQLModel, table=True):
 
     def get_links(self) -> List[str]:
         return json.loads(self.links) if self.links else []
-
-class Reference(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    url: str
-    title: Optional[str]
-    content: str
-    context: Optional[str]
-    article_id: Optional[int] = Field(default=None, foreign_key="article.id")
-    statement_id: Optional[int] = Field(default=None, foreign_key="statement.id")
-    
-    article: Optional[Article] = Relationship(back_populates="references")
-    statement: Optional[Statement] = Relationship(back_populates="references")
-
-    class Config:
-        arbitrary_types_allowed = True

@@ -8,7 +8,7 @@ import logging
 from tenacity import retry, stop_after_attempt, wait_exponential
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
-from models import User, Article, Statement, Reference
+from models import User, Article, Statement
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -28,7 +28,7 @@ engine = create_async_engine(
     max_overflow=0,
     pool_timeout=30,
     pool_pre_ping=True,
-    pool_recycle=1800  # Recycle connections after 30 minutes
+    pool_recycle=1800
 )
 
 # Create async session factory
@@ -38,6 +38,20 @@ async_session_maker = async_sessionmaker(
     expire_on_commit=False,
     autoflush=False
 )
+
+async def drop_and_recreate_tables():
+    """Drop and recreate all database tables"""
+    try:
+        async with engine.begin() as conn:
+            # Drop all tables with CASCADE
+            await conn.execute(text("DROP SCHEMA public CASCADE"))
+            await conn.execute(text("CREATE SCHEMA public"))
+            # Create all tables
+            await conn.run_sync(SQLModel.metadata.create_all)
+            logger.info("Database tables recreated successfully")
+    except Exception as e:
+        logger.error(f"Error in database reset: {e}")
+        raise
 
 async def seed_sample_articles(session: AsyncSession):
     """Seed the database with sample articles and related data."""
@@ -70,7 +84,7 @@ async def seed_sample_articles(session: AsyncSession):
         result = await session.execute(text("SELECT COUNT(*) FROM article"))
         article_count = result.scalar()
         
-        if article_count > 0:
+        if article_count and article_count > 0:
             logger.info("Articles already exist, skipping seed data")
             return
 
@@ -78,7 +92,7 @@ async def seed_sample_articles(session: AsyncSession):
         articles_data = [
             {
                 "title": "Climate Change Impact on Ocean Levels",
-                "text": "Recent studies show significant changes in ocean levels across the globe. Scientists have observed an accelerating rate of sea-level rise, which poses significant risks to coastal communities worldwide.",
+                "text": "Recent studies show significant changes in ocean levels across the globe.",
                 "domain": "climate-science.org",
                 "authors": "Dr. Jane Smith, Dr. John Doe",
                 "publication_date": datetime.utcnow() - timedelta(days=5),
@@ -86,83 +100,35 @@ async def seed_sample_articles(session: AsyncSession):
                     {
                         "content": "Global sea levels have risen by 8-9 inches since 1880.",
                         "verdict": "True",
-                        "explanation": "This statement is supported by multiple scientific studies and satellite data."
-                    }
-                ],
-                "references": [
-                    {
-                        "url": "https://climate-science.org/ocean-study-2024",
-                        "title": "Ocean Level Study 2024",
-                        "content": "Comprehensive analysis of global sea level changes",
-                        "context": "Primary research paper documenting sea level changes"
-                    }
-                ]
-            },
-            {
-                "title": "Advances in Renewable Energy Technology",
-                "text": "Solar and wind power technologies have made remarkable progress in recent years, with efficiency improvements and cost reductions making renewable energy more accessible than ever.",
-                "domain": "renewable-tech.org",
-                "authors": "Prof. Sarah Johnson",
-                "publication_date": datetime.utcnow() - timedelta(days=3),
-                "statements": [
-                    {
-                        "content": "Solar panel efficiency has improved by 30% in the last decade.",
-                        "verdict": "True",
-                        "explanation": "Verified through industry reports and research data."
-                    }
-                ],
-                "references": [
-                    {
-                        "url": "https://renewable-tech.org/solar-efficiency",
-                        "title": "Solar Panel Efficiency Report",
-                        "content": "Analysis of solar technology improvements",
-                        "context": "Industry report on solar panel development"
-                    }
-                ]
-            },
-            {
-                "title": "AI's Role in Modern Healthcare",
-                "text": "Artificial Intelligence is revolutionizing healthcare through improved diagnosis, treatment planning, and patient care management.",
-                "domain": "health-tech.org",
-                "authors": "Dr. Michael Chen, Dr. Lisa Brown",
-                "publication_date": datetime.utcnow() - timedelta(days=1),
-                "statements": [
-                    {
-                        "content": "AI algorithms can detect certain cancers with 95% accuracy.",
-                        "verdict": "Partially True",
-                        "explanation": "Accuracy varies by cancer type and study conditions."
-                    }
-                ],
-                "references": [
-                    {
-                        "url": "https://health-tech.org/ai-diagnostics",
-                        "title": "AI in Medical Diagnostics",
-                        "content": "Review of AI applications in healthcare",
-                        "context": "Research summary on AI diagnostic capabilities"
+                        "explanation": "This statement is supported by multiple scientific studies.",
+                        "references": [
+                            {
+                                "url": "https://climate-science.org/ocean-study-2024",
+                                "title": "Ocean Level Study 2024",
+                                "content": "Comprehensive analysis of global sea level changes",
+                                "context": "Primary research paper"
+                            }
+                        ]
                     }
                 ]
             }
         ]
 
-        # Create articles with their statements and references
+        # Create articles with their statements
         for article_data in articles_data:
             statements_data = article_data.pop("statements")
-            references_data = article_data.pop("references")
             
             article = Article(**article_data, user_id=user_id)
             session.add(article)
             await session.commit()
             await session.refresh(article)
 
-            # Add statements
+            # Add statements with references
             for stmt_data in statements_data:
+                references = stmt_data.pop("references")
                 statement = Statement(**stmt_data, article_id=article.id, user_id=user_id)
+                statement.set_references(references)
                 session.add(statement)
-
-            # Add references
-            for ref_data in references_data:
-                reference = Reference(**ref_data, article_id=article.id)
-                session.add(reference)
 
             await session.commit()
 
@@ -174,9 +140,7 @@ async def seed_sample_articles(session: AsyncSession):
 
 async def create_db_and_tables():
     try:
-        async with engine.begin() as conn:
-            await conn.run_sync(SQLModel.metadata.create_all)
-            logger.info("Database tables created successfully")
+        await drop_and_recreate_tables()
             
         # Seed sample articles after creating tables
         async with async_session_maker() as session:
@@ -200,6 +164,6 @@ async def get_session_context():
             await session.close()
 
 async def get_session():
-    """Dependency that yields database sessions with retry logic"""
+    """Dependency that yields database sessions"""
     async with get_session_context() as session:
         yield session

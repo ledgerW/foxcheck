@@ -2,8 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy import update, delete
-from typing import Optional
-from models import User, Article, Statement, Reference
+from typing import Optional, List
+from models import User, Article, Statement
 from schemas import UserCreate, UserUpdate, ArticleCreate, ArticleUpdate, StatementCreate
 from auth import get_password_hash
 import json
@@ -70,8 +70,7 @@ async def get_article(db: AsyncSession, article_id: int):
         select(Article)
         .options(
             joinedload(Article.user),
-            joinedload(Article.statements).joinedload(Statement.references),
-            joinedload(Article.references)
+            joinedload(Article.statements)
         )
         .where(Article.id == article_id)
     )
@@ -83,8 +82,7 @@ async def get_articles(db: AsyncSession, skip: int = 0, limit: int = 100):
         select(Article)
         .options(
             joinedload(Article.user),
-            joinedload(Article.statements).joinedload(Statement.references),
-            joinedload(Article.references)
+            joinedload(Article.statements)
         )
         .offset(skip)
         .limit(limit)
@@ -110,10 +108,12 @@ async def delete_article(db: AsyncSession, article: Article):
 
 # Statement CRUD operations
 async def create_statement(db: AsyncSession, statement: StatementCreate, article_id: int, user_id: int):
+    references_json = json.dumps(statement.references) if hasattr(statement, 'references') else None
     db_statement = Statement(
         content=statement.content,
         verdict=statement.verdict,
         explanation=statement.explanation,
+        references=references_json,
         article_id=article_id,
         user_id=user_id
     )
@@ -123,36 +123,25 @@ async def create_statement(db: AsyncSession, statement: StatementCreate, article
     return db_statement
 
 async def get_statement(db: AsyncSession, statement_id: int):
-    stmt = (
-        select(Statement)
-        .options(joinedload(Statement.references))
-        .where(Statement.id == statement_id)
-    )
+    stmt = select(Statement).where(Statement.id == statement_id)
     result = await db.execute(stmt)
-    return result.unique().scalar_one_or_none()
+    return result.scalar_one_or_none()
 
 async def get_statements(db: AsyncSession, skip: int = 0, limit: int = 100):
-    stmt = (
-        select(Statement)
-        .options(joinedload(Statement.references))
-        .offset(skip)
-        .limit(limit)
-    )
+    stmt = select(Statement).offset(skip).limit(limit)
     result = await db.execute(stmt)
-    return result.unique().scalars().all()
+    return result.scalars().all()
 
 async def get_article_statements(db: AsyncSession, article_id: int):
-    stmt = (
-        select(Statement)
-        .options(joinedload(Statement.references))
-        .where(Statement.article_id == article_id)
-    )
+    stmt = select(Statement).where(Statement.article_id == article_id)
     result = await db.execute(stmt)
-    return result.unique().scalars().all()
+    return result.scalars().all()
 
-async def update_statement(db: AsyncSession, statement: Statement, verdict: str, explanation: str):
+async def update_statement(db: AsyncSession, statement: Statement, verdict: str, explanation: str, references: List[dict] = None):
     statement.verdict = verdict
     statement.explanation = explanation
+    if references is not None:
+        statement.set_references(references)
     await db.commit()
     await db.refresh(statement)
     return statement
@@ -160,21 +149,3 @@ async def update_statement(db: AsyncSession, statement: Statement, verdict: str,
 async def delete_statement(db: AsyncSession, statement: Statement):
     await db.delete(statement)
     await db.commit()
-
-# Reference CRUD operations
-async def create_reference(
-    db: AsyncSession, url: str, title: str, content: str, 
-    context: str, article_id: int, statement_id: Optional[int] = None
-):
-    db_reference = Reference(
-        url=url,
-        title=title,
-        content=content,
-        context=context,
-        article_id=article_id,
-        statement_id=statement_id
-    )
-    db.add(db_reference)
-    await db.commit()
-    await db.refresh(db_reference)
-    return db_reference
