@@ -46,14 +46,10 @@ async def read_articles(
     try:
         articles = await get_articles(db, skip=skip, limit=limit)
         
-        # Filter out inactive articles
+        # Filter out inactive articles for public view
         if not include_inactive:
             articles = [article for article in articles if article.is_active]
             
-        # Ensure relationships are loaded
-        for article in articles:
-            await db.refresh(article)
-        
         return articles
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -65,16 +61,8 @@ async def read_article(
 ):
     try:
         article = await get_article(db, article_id=article_id)
-        if article is None:
+        if article is None or not article.is_active:
             raise HTTPException(status_code=404, detail="Article not found")
-        
-        # Check if article is inactive
-        if not article.is_active:
-            raise HTTPException(status_code=404, detail="Article not found")
-        
-        # Ensure relationships are loaded
-        await db.refresh(article)
-        
         return article
     except HTTPException:
         raise
