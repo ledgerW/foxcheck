@@ -53,6 +53,27 @@ async def drop_and_recreate_tables():
         logger.error(f"Error in database reset: {e}")
         raise
 
+async def update_admin_user(session: AsyncSession):
+    """Update the test user to have admin privileges"""
+    try:
+        result = await session.execute(
+            text("SELECT id FROM \"user\" WHERE username = :username"),
+            {"username": "testuser"}
+        )
+        user_id = result.scalar()
+        
+        if user_id:
+            await session.execute(
+                text("UPDATE \"user\" SET is_admin = TRUE WHERE id = :user_id"),
+                {"user_id": user_id}
+            )
+            await session.commit()
+            logger.info("Admin user updated successfully")
+    except Exception as e:
+        logger.error(f"Error updating admin user: {e}")
+        await session.rollback()
+        raise
+
 async def seed_sample_articles(session: AsyncSession):
     """Seed the database with sample articles and related data."""
     try:
@@ -71,7 +92,8 @@ async def seed_sample_articles(session: AsyncSession):
                 username="testuser",
                 email="test@example.com",
                 hashed_password=get_password_hash("testpass123"),
-                is_active=True
+                is_active=True,
+                is_admin=True  # Set is_admin to True for the test user
             )
             session.add(test_user)
             await session.commit()
@@ -79,6 +101,8 @@ async def seed_sample_articles(session: AsyncSession):
             user_id = test_user.id
         else:
             user_id = existing_user
+            # Update existing test user to be admin
+            await update_admin_user(session)
 
         # Check if articles already exist
         result = await session.execute(text("SELECT COUNT(*) FROM article"))

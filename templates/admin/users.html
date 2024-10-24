@@ -1,0 +1,71 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Users Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Users Management</h1>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Admin</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="users-table-body">
+                <!-- Users will be loaded dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-user-form">
+                        <input type="hidden" id="edit-user-id">
+                        <div class="mb-3">
+                            <label for="edit-username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="edit-username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="edit-email" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="edit-is-active">
+                            <label class="form-check-label" for="edit-is-active">Active</label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="edit-is-admin">
+                            <label class="form-check-label" for="edit-is-admin">Admin</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="save-user-changes">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/admin/users.js"></script>
+{% endblock %}

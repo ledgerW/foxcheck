@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %} - Statement Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+            background-color: #f8f9fa;
+        }
+        .sidebar .nav-link {
+            color: #333;
+            padding: .5rem 1rem;
+            border-radius: .25rem;
+            margin: .25rem 0;
+        }
+        .sidebar .nav-link:hover {
+            background-color: rgba(0, 0, 0, .05);
+        }
+        .sidebar .nav-link.active {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, .1);
+        }
+        .content {
+            padding: 20px;
+        }
+        .table td, .table th {
+            vertical-align: middle;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% include 'includes/header.html' %}
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link{% if request.url.path == '/admin' %} active{% endif %}" href="/admin">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link{% if request.url.path == '/admin/users' %} active{% endif %}" href="/admin/users">
+                                <i class="bi bi-people"></i> Users
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link{% if request.url.path == '/admin/articles' %} active{% endif %}" href="/admin/articles">
+                                <i class="bi bi-file-text"></i> Articles
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link{% if request.url.path == '/admin/statements' %} active{% endif %}" href="/admin/statements">
+                                <i class="bi bi-check-square"></i> Statements
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 col-lg-10 ms-sm-auto">
+                <div class="content">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/auth.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

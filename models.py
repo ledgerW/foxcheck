@@ -9,6 +9,7 @@ class User(SQLModel, table=True):
     email: str = Field(unique=True, index=True)
     hashed_password: str
     is_active: bool = Field(default=True)
+    is_admin: bool = Field(default=False)  # Added is_admin field
     created_at: datetime = Field(default_factory=datetime.utcnow)
     articles: List["Article"] = Relationship(back_populates="user")
 

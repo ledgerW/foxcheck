@@ -5,7 +5,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from routers import users, api, articles
+from routers import users, api, articles, admin
 from database import create_db_and_tables
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -52,6 +52,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.include_router(users.router)
 app.include_router(api.router)
 app.include_router(articles.router)
+app.include_router(admin.router)  # Added admin router
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")

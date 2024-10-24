@@ -1,0 +1,75 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Articles Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Articles Management</h1>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Domain</th>
+                    <th>Author</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="articles-table-body">
+                <!-- Articles will be loaded dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Edit Article Modal -->
+    <div class="modal fade" id="editArticleModal" tabindex="-1" aria-labelledby="editArticleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editArticleModalLabel">Edit Article</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-article-form">
+                        <input type="hidden" id="edit-article-id">
+                        <div class="mb-3">
+                            <label for="edit-title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="edit-title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-domain" class="form-label">Domain</label>
+                            <input type="text" class="form-control" id="edit-domain">
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-authors" class="form-label">Authors</label>
+                            <input type="text" class="form-control" id="edit-authors">
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-text" class="form-label">Content</label>
+                            <textarea class="form-control" id="edit-text" rows="5" required></textarea>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="edit-is-active">
+                            <label class="form-check-label" for="edit-is-active">Active</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="save-article-changes">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/admin/articles.js"></script>
+{% endblock %}

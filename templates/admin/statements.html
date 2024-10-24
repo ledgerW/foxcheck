@@ -1,0 +1,75 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Statements Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Statements Management</h1>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Content</th>
+                    <th>Verdict</th>
+                    <th>Article</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="statements-table-body">
+                <!-- Statements will be loaded dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Edit Statement Modal -->
+    <div class="modal fade" id="editStatementModal" tabindex="-1" aria-labelledby="editStatementModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editStatementModalLabel">Edit Statement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-statement-form">
+                        <input type="hidden" id="edit-statement-id">
+                        <div class="mb-3">
+                            <label for="edit-content" class="form-label">Content</label>
+                            <textarea class="form-control" id="edit-content" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-verdict" class="form-label">Verdict</label>
+                            <select class="form-control" id="edit-verdict">
+                                <option value="True">True</option>
+                                <option value="False">False</option>
+                                <option value="Partially True">Partially True</option>
+                                <option value="Unverified">Unverified</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-explanation" class="form-label">Explanation</label>
+                            <textarea class="form-control" id="edit-explanation" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-references" class="form-label">References (JSON)</label>
+                            <textarea class="form-control" id="edit-references" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="save-statement-changes">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/admin/statements.js"></script>
+{% endblock %}
