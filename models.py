@@ -9,6 +9,7 @@ class User(SQLModel, table=True):
     email: str = Field(unique=True, index=True)
     hashed_password: str
     is_active: bool = Field(default=True)
+    is_admin: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     articles: List["Article"] = Relationship(back_populates="user")
 
@@ -37,7 +38,6 @@ class Statement(SQLModel, table=True):
             self.references = None
         else:
             try:
-                # Ensure each reference has the required fields
                 formatted_refs = []
                 for ref in references:
                     formatted_ref = {
@@ -56,8 +56,8 @@ class Article(SQLModel, table=True):
     text: str
     date: datetime = Field(default_factory=datetime.utcnow)
     user_id: int = Field(foreign_key="user.id")
-    is_active: bool = Field(default=True)  # Added is_active field
-    domain: Optional[str] = Field(max_length=500)
+    is_active: bool = Field(default=True)
+    domain: Optional[str] = Field(max_length=500, unique=True, index=True)  # Unique constraint
     links: Optional[str] = Field(default=None)
     authors: Optional[str] = Field(max_length=1000)
     publication_date: Optional[datetime]

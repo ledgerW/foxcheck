@@ -6,14 +6,14 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from routers import users, api, articles
-from database import create_db_and_tables
+from database import init_db
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-from auth import get_current_active_user
-from pydantic import BaseModel, Field
+from auth import get_current_active_user, get_current_admin_user
+from pydantic import BaseModel
 from typing import List
 
 limiter = Limiter(key_func=get_remote_address)
@@ -29,7 +29,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 app = FastAPI(title="Statement Checker")
 
-# CORS middleware setup
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -61,8 +61,9 @@ templates = Jinja2Templates(directory="templates")
 
 @app.on_event("startup")
 async def on_startup():
-    await create_db_and_tables()
+    await init_db()
 
+# Public routes
 @app.get("/")
 @limiter.limit("20/minute")
 async def root(request: Request):
@@ -85,9 +86,18 @@ async def register_page(request: Request):
 async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
+# Admin routes
+@app.get("/admin")
+async def admin_page(request: Request, current_user: dict = Depends(get_current_admin_user)):
+    return templates.TemplateResponse("admin/dashboard.html", {"request": request})
+
 @app.get("/api/auth/status")
 async def auth_status(current_user: dict = Depends(get_current_active_user)):
-    return {"authenticated": True, "username": current_user.username}
+    return {
+        "authenticated": True,
+        "username": current_user.username,
+        "is_admin": current_user.is_admin
+    }
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

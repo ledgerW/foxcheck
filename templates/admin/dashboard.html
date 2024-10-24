@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Statement Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/main.css" rel="stylesheet">
+    <style>
+        .stats-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        .article-management {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .loading-spinner {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    {% include 'includes/header.html' %}
+
+    <div class="main-content container py-4">
+        <h1 class="mb-4">Admin Dashboard</h1>
+        
+        <!-- Stats Overview -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <h3 class="h5 mb-3">Total Articles</h3>
+                    <p class="h2 mb-0" id="total-articles">...</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <h3 class="h5 mb-3">Total Users</h3>
+                    <p class="h2 mb-0" id="total-users">...</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <h3 class="h5 mb-3">Total Statements</h3>
+                    <p class="h2 mb-0" id="total-statements">...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Article Management -->
+        <div class="article-management">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h3">Article Management</h2>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" id="refresh-btn">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Domain</th>
+                            <th>Author</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="articles-table-body">
+                        <!-- Articles will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="loading-spinner text-center mt-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'includes/footer.html' %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>
