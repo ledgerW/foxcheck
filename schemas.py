@@ -48,7 +48,7 @@ class StatementRead(StatementBase):
     created_at: datetime
     article_id: int
     user_id: int
-    references: Optional[List[Reference]] = None
+    references: Optional[List[Reference]] = []
 
     class Config:
         from_attributes = True
@@ -74,16 +74,16 @@ class ArticleBase(BaseModel):
     publication_date: Optional[datetime] = None
 
 class ArticleCreate(ArticleBase):
-    links: Optional[List[str]] = None
+    links: Optional[List[str]] = []
 
 class ArticleRead(ArticleBase):
     id: int
     date: datetime
     user_id: int
-    is_active: bool
+    is_active: bool = True
     extraction_date: Optional[datetime] = None
     statements: List[StatementRead] = []
-    links: Optional[List[str]] = []
+    links: List[str] = []
 
     class Config:
         from_attributes = True
@@ -99,6 +99,12 @@ class ArticleRead(ArticleBase):
             except json.JSONDecodeError:
                 return []
         return v or []
+
+    @validator('statements', pre=True)
+    def ensure_statements_list(cls, v):
+        if v is None:
+            return []
+        return v
 
 class ArticleUpdate(BaseModel):
     title: Optional[str] = None

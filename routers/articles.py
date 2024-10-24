@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from database import get_session
@@ -20,15 +21,16 @@ async def create_new_article(
         db_article = await create_article(db=db, article=article, user_id=current_user.id)
         return db_article
     except ValueError as e:
-        raise HTTPException(
+        # Return JSON response instead of raising exception
+        return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
-            detail=str(e)
+            content={'status': 'error', 'message': str(e)}
         )
     except Exception as e:
         await db.rollback()
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            content={'status': 'error', 'message': str(e)}
         )
 
 @router.get("", response_model=List[ArticleRead])
@@ -65,9 +67,9 @@ async def update_existing_article(
             raise HTTPException(status_code=403, detail="Not authorized to update this article")
         return await update_article(db=db, article=article, article_update=article_update)
     except ValueError as e:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
-            detail=str(e)
+            content={'status': 'error', 'message': str(e)}
         )
 
 @router.delete("/{article_id}")

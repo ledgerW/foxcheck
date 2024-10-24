@@ -57,14 +57,14 @@ class Article(SQLModel, table=True):
     date: datetime = Field(default_factory=datetime.utcnow)
     user_id: int = Field(foreign_key="user.id")
     is_active: bool = Field(default=True)
-    domain: Optional[str] = Field(max_length=500, unique=True, index=True)  # Added unique constraint
-    links: Optional[str] = Field(default=None)
+    domain: Optional[str] = Field(max_length=500, unique=True, index=True)
+    links: Optional[str] = Field(default='[]')  # Default to empty JSON array
     authors: Optional[str] = Field(max_length=1000)
     publication_date: Optional[datetime]
     extraction_date: datetime = Field(default_factory=datetime.utcnow)
     
     user: Optional[User] = Relationship(back_populates="articles")
-    statements: List[Statement] = Relationship(back_populates="article")
+    statements: List[Statement] = Relationship(back_populates="article", sa_relationship_kwargs={"lazy": "joined"})
 
     def get_links(self) -> List[str]:
         if not self.links:
@@ -76,6 +76,6 @@ class Article(SQLModel, table=True):
 
     def set_links(self, links: List[str]) -> None:
         if links is None:
-            self.links = None
+            self.links = '[]'  # Default to empty JSON array
         else:
             self.links = json.dumps(links)
