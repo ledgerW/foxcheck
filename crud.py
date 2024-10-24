@@ -25,13 +25,11 @@ async def get_user(db: AsyncSession, user_id: int):
     return await db.get(User, user_id)
 
 async def get_user_by_email(db: AsyncSession, email: str):
-    stmt = select(User).filter(User.email == email)
-    result = await db.execute(stmt)
+    result = await db.execute(select(User).where(User.email == email))
     return result.scalars().first()
 
 async def get_users(db: AsyncSession, skip: int = 0, limit: int = 100):
-    stmt = select(User).offset(skip).limit(limit)
-    result = await db.execute(stmt)
+    result = await db.execute(select(User).offset(skip).limit(limit))
     return result.scalars().all()
 
 async def update_user(db: AsyncSession, user: User, user_update: UserUpdate):
@@ -64,35 +62,36 @@ async def create_article(db: AsyncSession, article: ArticleCreate, user_id: int)
     db.add(db_article)
     await db.commit()
     await db.refresh(db_article)
-    
-    # Parse links back to list for response
     db_article.links = json.loads(db_article.links)
     return db_article
 
 async def get_article(db: AsyncSession, article_id: int):
-    stmt = (
-        select(Article)
-        .options(
-            joinedload('user'),
-            joinedload('statements')
-        )
-        .filter(Article.id == article_id)
-    )
+    # Get article
+    stmt = select(Article).where(Article.id == article_id)
     result = await db.execute(stmt)
-    article = result.unique().scalar_one_or_none()
-    
+    article = result.scalar_one_or_none()
+
     if article:
+        # Load user
+        user_stmt = select(User).where(User.id == article.user_id)
+        user_result = await db.execute(user_stmt)
+        article.user = user_result.scalar_one_or_none()
+
+        # Load statements
+        stmt_stmt = select(Statement).where(Statement.article_id == article.id)
+        stmt_result = await db.execute(stmt_stmt)
+        article.statements = stmt_result.scalars().all()
+
         # Ensure is_active is set
         if article.is_active is None:
             article.is_active = True
-            await db.commit()
-        
+
         # Parse links
         try:
             article.links = json.loads(article.links) if article.links else []
         except json.JSONDecodeError:
             article.links = []
-        
+
         # Parse references in statements
         if article.statements:
             for statement in article.statements:
@@ -100,23 +99,27 @@ async def get_article(db: AsyncSession, article_id: int):
                     statement.references = json.loads(statement.references) if statement.references else []
                 except json.JSONDecodeError:
                     statement.references = []
-    
+
     return article
 
 async def get_articles(db: AsyncSession, skip: int = 0, limit: int = 100):
-    stmt = (
-        select(Article)
-        .options(
-            joinedload('user'),
-            joinedload('statements')
-        )
-        .offset(skip)
-        .limit(limit)
-    )
+    # First get articles without relationships
+    stmt = select(Article).offset(skip).limit(limit)
     result = await db.execute(stmt)
-    articles = result.unique().scalars().all()
+    articles = result.scalars().all()
     
+    # Then load relationships one by one
     for article in articles:
+        # Load user relationship
+        user_stmt = select(User).where(User.id == article.user_id)
+        user_result = await db.execute(user_stmt)
+        article.user = user_result.scalar_one_or_none()
+        
+        # Load statements
+        stmt_stmt = select(Statement).where(Statement.article_id == article.id)
+        stmt_result = await db.execute(stmt_stmt)
+        article.statements = stmt_result.scalars().all()
+        
         # Ensure is_active is set
         if article.is_active is None:
             article.is_active = True
@@ -135,7 +138,6 @@ async def get_articles(db: AsyncSession, skip: int = 0, limit: int = 100):
                 except json.JSONDecodeError:
                     statement.references = []
     
-    await db.commit()
     return articles
 
 async def update_article(db: AsyncSession, article: Article, article_update: ArticleUpdate):
@@ -151,11 +153,7 @@ async def update_article(db: AsyncSession, article: Article, article_update: Art
     await db.refresh(article)
     
     # Parse links back to list for response
-    try:
-        article.links = json.loads(article.links) if article.links else []
-    except json.JSONDecodeError:
-        article.links = []
-    
+    article.links = json.loads(article.links) if article.links else []
     return article
 
 async def delete_article(db: AsyncSession, article: Article):
@@ -170,7 +168,7 @@ async def create_statement(db: AsyncSession, statement: StatementCreate, article
             formatted_refs = []
             for ref in statement.references:
                 formatted_ref = {
-                    'title': str(ref.title) if ref.title else '',
+                    'title': str(ref.title) if hasattr(ref, 'title') else '',
                     'source': str(ref.source),
                     'summary': str(ref.summary)
                 }
@@ -192,49 +190,33 @@ async def create_statement(db: AsyncSession, statement: StatementCreate, article
     await db.refresh(db_statement)
     
     # Parse references back to list for response
-    try:
-        db_statement.references = json.loads(db_statement.references)
-    except json.JSONDecodeError:
-        db_statement.references = []
-    
+    db_statement.references = json.loads(db_statement.references)
     return db_statement
 
 async def get_statement(db: AsyncSession, statement_id: int):
-    stmt = select(Statement).filter(Statement.id == statement_id)
-    result = await db.execute(stmt)
+    result = await db.execute(select(Statement).where(Statement.id == statement_id))
     statement = result.scalar_one_or_none()
     
     if statement:
-        try:
-            statement.references = json.loads(statement.references) if statement.references else []
-        except json.JSONDecodeError:
-            statement.references = []
+        statement.references = json.loads(statement.references) if statement.references else []
     
     return statement
 
 async def get_statements(db: AsyncSession, skip: int = 0, limit: int = 100):
-    stmt = select(Statement).offset(skip).limit(limit)
-    result = await db.execute(stmt)
+    result = await db.execute(select(Statement).offset(skip).limit(limit))
     statements = result.scalars().all()
     
     for statement in statements:
-        try:
-            statement.references = json.loads(statement.references) if statement.references else []
-        except json.JSONDecodeError:
-            statement.references = []
+        statement.references = json.loads(statement.references) if statement.references else []
     
     return statements
 
 async def get_article_statements(db: AsyncSession, article_id: int):
-    stmt = select(Statement).filter(Statement.article_id == article_id)
-    result = await db.execute(stmt)
+    result = await db.execute(select(Statement).where(Statement.article_id == article_id))
     statements = result.scalars().all()
     
     for statement in statements:
-        try:
-            statement.references = json.loads(statement.references) if statement.references else []
-        except json.JSONDecodeError:
-            statement.references = []
+        statement.references = json.loads(statement.references) if statement.references else []
     
     return statements
 
@@ -258,13 +240,7 @@ async def update_statement(db: AsyncSession, statement: Statement, verdict: str,
     
     await db.commit()
     await db.refresh(statement)
-    
-    # Parse references back to list for response
-    try:
-        statement.references = json.loads(statement.references)
-    except json.JSONDecodeError:
-        statement.references = []
-    
+    statement.references = json.loads(statement.references)
     return statement
 
 async def delete_statement(db: AsyncSession, statement: Statement):
