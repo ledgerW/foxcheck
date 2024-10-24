@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, validator, Field
+from pydantic import BaseModel, EmailStr, validator
 from typing import Optional, List
 from datetime import datetime
 import json
@@ -8,25 +8,17 @@ class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
-    is_admin: Optional[bool] = False
 
 class UserRead(BaseModel):
     id: int
     username: str
     email: EmailStr
     is_active: bool
-    is_admin: bool = False
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
     password: Optional[str] = None
-    is_active: Optional[bool] = None
-    is_admin: Optional[bool] = None
 
 class Token(BaseModel):
     access_token: str
@@ -34,7 +26,6 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str] = None
-    is_admin: Optional[bool] = False
 
 # Reference schema (used within Statement)
 class Reference(BaseModel):
@@ -78,35 +69,27 @@ class StatementRead(StatementBase):
 class ArticleBase(BaseModel):
     title: str
     text: str
-    domain: Optional[str] = Field(None, max_length=500)
-    authors: Optional[str] = Field(None, max_length=1000)
+    domain: Optional[str] = None
+    authors: Optional[str] = None
     publication_date: Optional[datetime] = None
 
 class ArticleCreate(ArticleBase):
-    links: Optional[List[str]] = []
-    is_active: bool = True
+    links: Optional[List[str]] = None
 
 class ArticleRead(ArticleBase):
     id: int
     date: datetime
     user_id: int
-    is_active: bool = True
+    is_active: bool
     extraction_date: Optional[datetime] = None
     statements: List[StatementRead] = []
     links: Optional[List[str]] = []
-    user: Optional[UserRead] = None
 
     class Config:
         from_attributes = True
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
-
-    @validator('statements', pre=True)
-    def ensure_list_statements(cls, v):
-        if v is None:
-            return []
-        return v
 
     @validator('links', pre=True)
     def parse_links(cls, v):
