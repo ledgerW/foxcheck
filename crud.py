@@ -12,43 +12,71 @@ import logging
 logger = logging.getLogger(__name__)
 
 async def create_user(db: AsyncSession, user: UserCreate):
-    db_user = User(
-        username=user.username,
-        email=user.email,
-        hashed_password=get_password_hash(user.password),
-        is_admin=user.is_admin if user.is_admin is not None else False
-    )
-    db.add(db_user)
-    await db.commit()
-    await db.refresh(db_user)
-    return db_user
+    try:
+        db_user = User(
+            username=user.username,
+            email=user.email,
+            hashed_password=get_password_hash(user.password),
+            is_admin=user.is_admin if user.is_admin is not None else False
+        )
+        async with db.begin():
+            db.add(db_user)
+        await db.refresh(db_user)
+        return db_user
+    except Exception as e:
+        logger.error(f"Error creating user: {str(e)}")
+        raise
 
 async def get_user(db: AsyncSession, user_id: int):
-    return await db.get(User, user_id)
+    try:
+        async with db.begin():
+            return await db.get(User, user_id)
+    except Exception as e:
+        logger.error(f"Error getting user {user_id}: {str(e)}")
+        raise
 
 async def get_user_by_email(db: AsyncSession, email: str):
-    stmt = select(User).where(User.email == email)
-    result = await db.execute(stmt)
-    return result.scalars().first()
+    try:
+        stmt = select(User).where(User.email == email)
+        async with db.begin():
+            result = await db.execute(stmt)
+            return result.scalars().first()
+    except Exception as e:
+        logger.error(f"Error getting user by email {email}: {str(e)}")
+        raise
 
 async def get_users(db: AsyncSession, skip: int = 0, limit: int = 100):
-    stmt = select(User).offset(skip).limit(limit)
-    result = await db.execute(stmt)
-    return result.scalars().all()
+    try:
+        stmt = select(User).offset(skip).limit(limit)
+        async with db.begin():
+            result = await db.execute(stmt)
+            return result.scalars().all()
+    except Exception as e:
+        logger.error(f"Error getting users: {str(e)}")
+        raise
 
 async def update_user(db: AsyncSession, user: User, user_update: UserUpdate):
-    update_data = user_update.dict(exclude_unset=True)
-    if "password" in update_data:
-        update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
-    for key, value in update_data.items():
-        setattr(user, key, value)
-    await db.commit()
-    await db.refresh(user)
-    return user
+    try:
+        update_data = user_update.dict(exclude_unset=True)
+        if "password" in update_data:
+            update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
+        for key, value in update_data.items():
+            setattr(user, key, value)
+        async with db.begin():
+            await db.merge(user)
+        await db.refresh(user)
+        return user
+    except Exception as e:
+        logger.error(f"Error updating user: {str(e)}")
+        raise
 
 async def delete_user(db: AsyncSession, user: User):
-    await db.delete(user)
-    await db.commit()
+    try:
+        async with db.begin():
+            await db.delete(user)
+    except Exception as e:
+        logger.error(f"Error deleting user: {str(e)}")
+        raise
 
 async def create_article(db: AsyncSession, article: ArticleCreate, user_id: int):
     try:
@@ -63,8 +91,8 @@ async def create_article(db: AsyncSession, article: ArticleCreate, user_id: int)
             links=links_json,
             is_active=True
         )
-        db.add(db_article)
-        await db.commit()
+        async with db.begin():
+            db.add(db_article)
         await db.refresh(db_article)
         
         # Parse links for response
@@ -72,37 +100,37 @@ async def create_article(db: AsyncSession, article: ArticleCreate, user_id: int)
         return db_article
     except Exception as e:
         logger.error(f"Error creating article: {str(e)}")
-        await db.rollback()
         raise
 
 async def get_article(db: AsyncSession, article_id: int):
     try:
         stmt = select(Article).where(Article.id == article_id)
-        result = await db.execute(stmt)
-        article = result.scalar_one_or_none()
-
-        if article:
-            # Set defaults
-            if article.is_active is None:
-                article.is_active = True
-            
-            # Handle links
-            try:
-                article.links = json.loads(article.links) if article.links else []
-            except json.JSONDecodeError:
-                article.links = []
-            
-            # Load statements
-            stmt = select(Statement).where(Statement.article_id == article_id)
+        async with db.begin():
             result = await db.execute(stmt)
-            article.statements = result.scalars().all()
-            
-            # Parse references in statements
-            for statement in article.statements:
+            article = result.scalar_one_or_none()
+
+            if article:
+                # Set defaults
+                if article.is_active is None:
+                    article.is_active = True
+                
+                # Handle links
                 try:
-                    statement.references = json.loads(statement.references) if statement.references else []
+                    article.links = json.loads(article.links) if article.links else []
                 except json.JSONDecodeError:
-                    statement.references = []
+                    article.links = []
+                
+                # Load statements
+                stmt = select(Statement).where(Statement.article_id == article_id)
+                result = await db.execute(stmt)
+                article.statements = list(result.scalars().all())
+                
+                # Parse references in statements
+                for statement in article.statements:
+                    try:
+                        statement.references = json.loads(statement.references) if statement.references else []
+                    except json.JSONDecodeError:
+                        statement.references = []
 
         return article
     except Exception as e:
@@ -111,10 +139,11 @@ async def get_article(db: AsyncSession, article_id: int):
 
 async def get_articles(db: AsyncSession, skip: int = 0, limit: int = 100):
     try:
-        # Simple query without relationships first
+        # Simple query without joins
         stmt = select(Article).offset(skip).limit(limit)
-        result = await db.execute(stmt)
-        articles = result.scalars().all()
+        async with db.begin():
+            result = await db.execute(stmt)
+            articles = result.scalars().all()
         
         # Set defaults for required fields
         for article in articles:
@@ -149,7 +178,8 @@ async def update_article(db: AsyncSession, article: Article, article_update: Art
         for key, value in update_data.items():
             setattr(article, key, value)
         
-        await db.commit()
+        async with db.begin():
+            await db.merge(article)
         await db.refresh(article)
         
         # Parse links for response
@@ -157,16 +187,12 @@ async def update_article(db: AsyncSession, article: Article, article_update: Art
         return article
     except Exception as e:
         logger.error(f"Error updating article: {str(e)}")
-        await db.rollback()
         raise
 
 async def delete_article(db: AsyncSession, article: Article):
     try:
-        await db.delete(article)
-        await db.commit()
+        async with db.begin():
+            await db.delete(article)
     except Exception as e:
         logger.error(f"Error deleting article: {str(e)}")
-        await db.rollback()
         raise
-
-# Statement CRUD operations remain unchanged...
