@@ -56,9 +56,9 @@ class Article(SQLModel, table=True):
     text: str
     date: datetime = Field(default_factory=datetime.utcnow)
     user_id: int = Field(foreign_key="user.id")
-    is_active: bool = Field(default=True)
+    is_active: bool = Field(default=True)  # Added is_active field
     domain: Optional[str] = Field(max_length=500)
-    links: Optional[str] = Field(default=None)  # Stores JSON
+    links: Optional[str] = Field(default=None)
     authors: Optional[str] = Field(max_length=1000)
     publication_date: Optional[datetime]
     extraction_date: datetime = Field(default_factory=datetime.utcnow)
@@ -66,30 +66,16 @@ class Article(SQLModel, table=True):
     user: Optional[User] = Relationship(back_populates="articles")
     statements: List[Statement] = Relationship(back_populates="article")
 
-    def set_links(self, links: List[str]) -> None:
-        """Set links as JSON string"""
-        if links is None:
-            self.links = None
-        else:
-            if isinstance(links, str):
-                try:
-                    # Verify it's a valid JSON string
-                    json.loads(links)
-                    self.links = links
-                except json.JSONDecodeError:
-                    self.links = None
-            else:
-                self.links = json.dumps(links)
-
     def get_links(self) -> List[str]:
-        """Get the list of links from JSON string"""
         if not self.links:
             return []
         try:
-            if isinstance(self.links, str):
-                return json.loads(self.links)
-            elif isinstance(self.links, list):
-                return self.links
-            return []
+            return json.loads(self.links) if isinstance(self.links, str) else []
         except json.JSONDecodeError:
             return []
+
+    def set_links(self, links: List[str]) -> None:
+        if links is None:
+            self.links = None
+        else:
+            self.links = json.dumps(links)

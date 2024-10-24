@@ -1,27 +1,9 @@
 <nav class="navbar navbar-expand-lg navbar-light">
     <div class="container">
         <a class="navbar-brand" href="/">Statement Checker</a>
-        <div class="d-flex align-items-center">
-            <button class="navbar-toggler me-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <i class="bi bi-list"></i>
-            </button>
-            <div class="nav-item dropdown d-lg-none">
-                <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i class="bi bi-person-circle"></i>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <div id="logged-out-menu-mobile">
-                        <li><a class="dropdown-item" href="/login">Login</a></li>
-                        <li><a class="dropdown-item" href="/register">Register</a></li>
-                    </div>
-                    <div id="logged-in-menu-mobile">
-                        <li><span class="dropdown-item-text" id="username-display-mobile"></span></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><button class="dropdown-item" id="logout-button-mobile">Logout</button></li>
-                    </div>
-                </ul>
-            </div>
-        </div>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-list"></i>
+        </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
@@ -31,8 +13,8 @@
                     <a class="nav-link{% if request.url.path == '/statement_checker' %} active{% endif %}" href="/statement_checker">Statement Checker</a>
                 </li>
             </ul>
-            <div class="nav-item dropdown d-none d-lg-block">
-                <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-person-circle"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">

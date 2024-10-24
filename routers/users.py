@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from database import get_session
@@ -9,6 +9,14 @@ from crud import create_user, get_user, get_users, update_user, delete_user, get
 from auth import authenticate_user, create_access_token, get_current_active_user
 from config import settings
 from datetime import timedelta
+from jose import JWTError, jwt
+from pydantic import BaseModel
+
+
+class TokenString(BaseModel):
+    token: str
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -77,3 +85,26 @@ async def delete_user_endpoint(
         raise HTTPException(status_code=404, detail="User not found")
     await delete_user(db=db, user=db_user)
     return {"ok": True}
+
+
+@router.get("/check-login-status")
+async def check_login_status(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_session)):
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id: int = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+        user = await get_user(db, user_id=user_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        return {"status": "logged_in", "user_id": user.id, "username": user.username}
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
+@router.get("/validate-token")
+async def validate_token(token: str = Depends(oauth2_scheme)):
+    try:
+        jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        return {"valid": True}
+    except JWTError:
+        return {"valid": False, "detail": "Invalid token"}

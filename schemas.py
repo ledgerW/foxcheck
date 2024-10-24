@@ -80,16 +80,25 @@ class ArticleRead(ArticleBase):
     id: int
     date: datetime
     user_id: int
-    is_active: bool = True
+    is_active: bool
     extraction_date: Optional[datetime] = None
     statements: List[StatementRead] = []
-    links: Optional[List[str]] = None
+    links: Optional[List[str]] = []
 
     class Config:
         from_attributes = True
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
+
+    @validator('links', pre=True)
+    def parse_links(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return []
+        return v or []
 
 class ArticleUpdate(BaseModel):
     title: Optional[str] = None
