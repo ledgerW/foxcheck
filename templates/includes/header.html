@@ -7,10 +7,14 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link{% if request.url.path == '/' %} active{% endif %}" href="/">Home</a>
+                    <a class="nav-link{% if request.url.path == '/' %} active{% endif %}" href="/">
+                        <i class="bi bi-house-door"></i> Home
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link{% if request.url.path == '/statement_checker' %} active{% endif %}" href="/statement_checker">Statement Checker</a>
+                    <a class="nav-link{% if request.url.path == '/statement_checker' %} active{% endif %}" href="/statement_checker">
+                        <i class="bi bi-check-circle"></i> Statement Checker
+                    </a>
                 </li>
             </ul>
             <div class="nav-item dropdown">
@@ -19,13 +23,17 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <div id="logged-out-menu">
-                        <li><a class="dropdown-item" href="/login">Login</a></li>
-                        <li><a class="dropdown-item" href="/register">Register</a></li>
+                        <li><a class="dropdown-item" href="/login"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
+                        <li><a class="dropdown-item" href="/register"><i class="bi bi-person-plus"></i> Register</a></li>
                     </div>
-                    <div id="logged-in-menu">
+                    <div id="logged-in-menu" style="display: none;">
                         <li><span class="dropdown-item-text" id="username-display"></span></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><button class="dropdown-item" id="logout-button">Logout</button></li>
+                        <li>
+                            <button class="dropdown-item" id="logout-button">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </button>
+                        </li>
                     </div>
                 </ul>
             </div>

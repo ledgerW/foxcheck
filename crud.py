@@ -58,12 +58,19 @@ async def create_article(db: AsyncSession, article: ArticleCreate, user_id: int)
         authors=article.authors,
         publication_date=article.publication_date,
         user_id=user_id,
-        links=links_json
+        links=links_json,
+        is_active=True  # Ensure is_active is set
     )
     db.add(db_article)
     await db.commit()
     await db.refresh(db_article)
-    return db_article
+    
+    # Explicitly load relationships
+    stmt = select(Article).options(
+        joinedload(Article.statements)
+    ).where(Article.id == db_article.id)
+    result = await db.execute(stmt)
+    return result.unique().scalar_one()
 
 async def get_article(db: AsyncSession, article_id: int):
     stmt = (

@@ -14,8 +14,17 @@ router = APIRouter(prefix="/api/articles", tags=["articles"])
 async def create_new_article(
     article: ArticleCreate,
     db: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_active_user)):
-    return await create_article(db=db, article=article, user_id=current_user.id)
+    current_user: User = Depends(get_current_active_user)
+):
+    try:
+        db_article = await create_article(db=db, article=article, user_id=current_user.id)
+        # Ensure statements is initialized
+        if not hasattr(db_article, 'statements'):
+            db_article.statements = []
+        return db_article
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("", response_model=List[ArticleRead])
 async def read_articles(
