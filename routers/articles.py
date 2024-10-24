@@ -18,13 +18,18 @@ async def create_new_article(
 ):
     try:
         db_article = await create_article(db=db, article=article, user_id=current_user.id)
-        # Ensure statements is initialized
-        if not hasattr(db_article, 'statements'):
-            db_article.statements = []
         return db_article
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
     except Exception as e:
         await db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
 
 @router.get("", response_model=List[ArticleRead])
 async def read_articles(
@@ -50,19 +55,27 @@ async def update_existing_article(
     article_id: int,
     article_update: ArticleUpdate,
     db: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_active_user)):
-    article = await get_article(db, article_id=article_id)
-    if article is None:
-        raise HTTPException(status_code=404, detail="Article not found")
-    if article.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this article")
-    return await update_article(db=db, article=article, article_update=article_update)
+    current_user: User = Depends(get_current_active_user)
+):
+    try:
+        article = await get_article(db, article_id=article_id)
+        if article is None:
+            raise HTTPException(status_code=404, detail="Article not found")
+        if article.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to update this article")
+        return await update_article(db=db, article=article, article_update=article_update)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
 
 @router.delete("/{article_id}")
 async def delete_existing_article(
     article_id: int,
     db: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_active_user)):
+    current_user: User = Depends(get_current_active_user)
+):
     article = await get_article(db, article_id=article_id)
     if article is None:
         raise HTTPException(status_code=404, detail="Article not found")

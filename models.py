@@ -56,8 +56,8 @@ class Article(SQLModel, table=True):
     text: str
     date: datetime = Field(default_factory=datetime.utcnow)
     user_id: int = Field(foreign_key="user.id")
-    is_active: bool = Field(default=True)  # Added is_active field
-    domain: Optional[str] = Field(max_length=500)
+    is_active: bool = Field(default=True)
+    domain: Optional[str] = Field(max_length=500, unique=True, index=True)  # Added unique constraint
     links: Optional[str] = Field(default=None)
     authors: Optional[str] = Field(max_length=1000)
     publication_date: Optional[datetime]

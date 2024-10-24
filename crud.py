@@ -7,6 +7,7 @@ from models import User, Article, Statement
 from schemas import UserCreate, UserUpdate, ArticleCreate, ArticleUpdate, StatementCreate
 from auth import get_password_hash
 import json
+from sqlalchemy.exc import IntegrityError
 
 # User CRUD operations
 async def create_user(db: AsyncSession, user: UserCreate):
@@ -49,7 +50,19 @@ async def delete_user(db: AsyncSession, user: User):
     await db.commit()
 
 # Article CRUD operations
+async def check_domain_exists(db: AsyncSession, domain: str) -> bool:
+    if domain:
+        result = await db.execute(
+            select(Article).where(Article.domain == domain)
+        )
+        return result.scalar_one_or_none() is not None
+    return False
+
 async def create_article(db: AsyncSession, article: ArticleCreate, user_id: int):
+    # Check for existing domain if provided
+    if article.domain and await check_domain_exists(db, article.domain):
+        raise ValueError(f"An article with domain '{article.domain}' already exists")
+
     links_json = json.dumps(article.links) if article.links else None
     db_article = Article(
         title=article.title,
@@ -59,18 +72,25 @@ async def create_article(db: AsyncSession, article: ArticleCreate, user_id: int)
         publication_date=article.publication_date,
         user_id=user_id,
         links=links_json,
-        is_active=True  # Ensure is_active is set
+        is_active=True
     )
-    db.add(db_article)
-    await db.commit()
-    await db.refresh(db_article)
     
-    # Explicitly load relationships
-    stmt = select(Article).options(
-        joinedload(Article.statements)
-    ).where(Article.id == db_article.id)
-    result = await db.execute(stmt)
-    return result.unique().scalar_one()
+    try:
+        db.add(db_article)
+        await db.commit()
+        await db.refresh(db_article)
+        
+        # Explicitly load relationships
+        stmt = select(Article).options(
+            joinedload(Article.statements)
+        ).where(Article.id == db_article.id)
+        result = await db.execute(stmt)
+        return result.unique().scalar_one()
+    except IntegrityError as e:
+        await db.rollback()
+        if "duplicate key value violates unique constraint" in str(e):
+            raise ValueError(f"An article with domain '{article.domain}' already exists")
+        raise
 
 async def get_article(db: AsyncSession, article_id: int):
     stmt = (
@@ -105,9 +125,15 @@ async def update_article(db: AsyncSession, article: Article, article_update: Art
     for key, value in update_data.items():
         setattr(article, key, value)
     
-    await db.commit()
-    await db.refresh(article)
-    return article
+    try:
+        await db.commit()
+        await db.refresh(article)
+        return article
+    except IntegrityError as e:
+        await db.rollback()
+        if "duplicate key value violates unique constraint" in str(e):
+            raise ValueError(f"An article with domain '{article_update.domain}' already exists")
+        raise
 
 async def delete_article(db: AsyncSession, article: Article):
     await db.delete(article)
