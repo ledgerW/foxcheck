@@ -59,7 +59,7 @@ async def create_article(db: AsyncSession, article: ArticleCreate, user_id: int)
         publication_date=article.publication_date,
         user_id=user_id,
         links=links_json,
-        is_active=True  # Ensure is_active is set
+        is_active=article.is_active
     )
     db.add(db_article)
     await db.commit()
@@ -70,15 +70,14 @@ async def get_article(db: AsyncSession, article_id: int):
     stmt = (
         select(Article)
         .options(
-            joinedload(Article.user),
-            joinedload(Article.statements)
+            selectinload(Article.user),
+            selectinload(Article.statements)
         )
         .where(Article.id == article_id)
     )
     result = await db.execute(stmt)
     article = result.unique().scalar_one_or_none()
     
-    # Ensure is_active is set
     if article and article.is_active is None:
         article.is_active = True
         await db.commit()
@@ -89,8 +88,8 @@ async def get_articles(db: AsyncSession, skip: int = 0, limit: int = 100):
     stmt = (
         select(Article)
         .options(
-            joinedload(Article.user),
-            joinedload(Article.statements)
+            selectinload(Article.user),
+            selectinload(Article.statements)
         )
         .offset(skip)
         .limit(limit)
@@ -98,16 +97,19 @@ async def get_articles(db: AsyncSession, skip: int = 0, limit: int = 100):
     result = await db.execute(stmt)
     articles = result.unique().scalars().all()
     
-    # Ensure is_active is set for all articles
+    # Set default values if needed
     for article in articles:
         if article.is_active is None:
             article.is_active = True
-    
+        if not hasattr(article, 'statements'):
+            article.statements = []
+            
     await db.commit()
     return articles
 
 async def update_article(db: AsyncSession, article: Article, article_update: ArticleUpdate):
     update_data = article_update.dict(exclude_unset=True)
+    
     if 'links' in update_data:
         update_data['links'] = json.dumps(update_data['links'])
     
