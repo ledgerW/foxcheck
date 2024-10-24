@@ -64,13 +64,7 @@ async def create_article(db: AsyncSession, article: ArticleCreate, user_id: int)
     db.add(db_article)
     await db.commit()
     await db.refresh(db_article)
-    
-    # Explicitly load relationships
-    stmt = select(Article).options(
-        joinedload(Article.statements)
-    ).where(Article.id == db_article.id)
-    result = await db.execute(stmt)
-    return result.unique().scalar_one()
+    return db_article
 
 async def get_article(db: AsyncSession, article_id: int):
     stmt = (
@@ -82,7 +76,14 @@ async def get_article(db: AsyncSession, article_id: int):
         .where(Article.id == article_id)
     )
     result = await db.execute(stmt)
-    return result.unique().scalar_one_or_none()
+    article = result.unique().scalar_one_or_none()
+    
+    # Ensure is_active is set
+    if article and article.is_active is None:
+        article.is_active = True
+        await db.commit()
+    
+    return article
 
 async def get_articles(db: AsyncSession, skip: int = 0, limit: int = 100):
     stmt = (
@@ -95,7 +96,15 @@ async def get_articles(db: AsyncSession, skip: int = 0, limit: int = 100):
         .limit(limit)
     )
     result = await db.execute(stmt)
-    return result.unique().scalars().all()
+    articles = result.unique().scalars().all()
+    
+    # Ensure is_active is set for all articles
+    for article in articles:
+        if article.is_active is None:
+            article.is_active = True
+    
+    await db.commit()
+    return articles
 
 async def update_article(db: AsyncSession, article: Article, article_update: ArticleUpdate):
     update_data = article_update.dict(exclude_unset=True)
