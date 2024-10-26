@@ -19,8 +19,15 @@ async def admin_dashboard(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
+    print(f"Admin dashboard access attempt - Headers: {dict(request.headers)}")
     try:
-        if not current_user or not current_user.is_admin:
+        if not current_user:
+            print("No current user found")
+            return RedirectResponse(url="/login", status_code=302)
+            
+        print(f"User authenticated: {current_user.username}, is_admin: {current_user.is_admin}")
+        if not current_user.is_admin:
+            print(f"User {current_user.username} is not admin")
             return RedirectResponse(url="/", status_code=302)
         
         return templates.TemplateResponse("admin/dashboard.html", {
@@ -28,8 +35,12 @@ async def admin_dashboard(
             "user": current_user
         })
     except HTTPException as e:
+        print(f"HTTP Exception in admin_dashboard: {e.detail}")
         if e.status_code == 401:
             return RedirectResponse(url="/login", status_code=302)
+        raise
+    except Exception as e:
+        print(f"Unexpected error in admin_dashboard: {str(e)}")
         raise
 
 @router.get("/admin/users", response_class=HTMLResponse)
@@ -39,6 +50,8 @@ async def admin_users(
     current_user: User = Depends(get_current_active_user)
 ):
     try:
+        if not current_user:
+            return RedirectResponse(url="/login", status_code=302)
         if not current_user.is_admin:
             return RedirectResponse(url="/", status_code=302)
         
@@ -58,6 +71,8 @@ async def admin_articles(
     current_user: User = Depends(get_current_active_user)
 ):
     try:
+        if not current_user:
+            return RedirectResponse(url="/login", status_code=302)
         if not current_user.is_admin:
             return RedirectResponse(url="/", status_code=302)
         
@@ -77,6 +92,8 @@ async def admin_statements(
     current_user: User = Depends(get_current_active_user)
 ):
     try:
+        if not current_user:
+            return RedirectResponse(url="/login", status_code=302)
         if not current_user.is_admin:
             return RedirectResponse(url="/", status_code=302)
         
@@ -95,7 +112,7 @@ async def get_admin_stats(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user.is_admin:
+    if not current_user or not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access admin stats"
@@ -116,7 +133,7 @@ async def get_admin_users(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user.is_admin:
+    if not current_user or not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access user management"
@@ -133,7 +150,7 @@ async def update_user_admin(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user.is_admin:
+    if not current_user or not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update users"
@@ -155,7 +172,7 @@ async def get_admin_articles(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user.is_admin:
+    if not current_user or not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access article management"
@@ -172,7 +189,7 @@ async def update_article_admin(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user.is_admin:
+    if not current_user or not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update articles"
@@ -194,7 +211,7 @@ async def get_admin_statements(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user.is_admin:
+    if not current_user or not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access statement management"
@@ -211,7 +228,7 @@ async def update_statement_admin(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user.is_admin:
+    if not current_user or not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update statements"
