@@ -19,11 +19,10 @@ async def admin_dashboard(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    print(f"Admin access attempt by user: {current_user.username}, is_admin: {current_user.is_admin}")
     try:
-        if not current_user.is_admin:
+        if not current_user or not current_user.is_admin:
             return RedirectResponse(url="/", status_code=302)
-
+        
         return templates.TemplateResponse("admin/dashboard.html", {
             "request": request,
             "user": current_user
@@ -32,7 +31,6 @@ async def admin_dashboard(
         if e.status_code == 401:
             return RedirectResponse(url="/login", status_code=302)
         raise
-
 
 @router.get("/admin/users", response_class=HTMLResponse)
 async def admin_users(

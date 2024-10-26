@@ -33,13 +33,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Add admin dashboard link handler
+    // Update the admin dashboard link handler
     if (adminDashboardLink) {
         adminDashboardLink.addEventListener('click', async (e) => {
             e.preventDefault();
             const token = localStorage.getItem('access_token');
             
             try {
+                // First check admin status
                 const response = await fetch('/api/auth/status', {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (response.ok) {
                     const data = await response.json();
                     if (data.authenticated && data.is_admin) {
+                        // If admin, make the request with proper headers
                         window.location.href = '/admin';
                     } else {
                         alert('Unauthorized: Admin access required');
