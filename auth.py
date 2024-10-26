@@ -72,7 +72,7 @@ async def get_current_active_user(
         )
     return current_user
 
-async def authenticate_user(db: AsyncSession, username: str, password: str) -> Optional[User]:
+async def authenticate_user(username: str, password: str, db: AsyncSession) -> Optional[User]:
     stmt = select(User).where(User.username == username)
     result = await db.execute(stmt)
     user = result.scalars().first()
