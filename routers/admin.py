@@ -12,76 +12,80 @@ from sqlalchemy.orm import selectinload
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
-async def get_admin_user(current_user: User) -> User:
-    if not current_user.is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have admin privileges"
-        )
-    return current_user
-
 # Admin dashboard pages
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_dashboard(
     request: Request,
+    db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
     try:
-        admin_user = await get_admin_user(current_user)
+        if not current_user.is_admin:
+            return RedirectResponse(url="/", status_code=302)
+        
         return templates.TemplateResponse("admin/dashboard.html", {
             "request": request,
-            "user": admin_user
+            "user": current_user
         })
     except HTTPException as e:
-        if e.status_code in (401, 403):
+        if e.status_code == 401:
             return RedirectResponse(url="/login", status_code=302)
         raise
 
 @router.get("/admin/users", response_class=HTMLResponse)
 async def admin_users(
     request: Request,
+    db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
     try:
-        admin_user = await get_admin_user(current_user)
+        if not current_user.is_admin:
+            return RedirectResponse(url="/", status_code=302)
+        
         return templates.TemplateResponse("admin/users.html", {
             "request": request,
-            "user": admin_user
+            "user": current_user
         })
     except HTTPException as e:
-        if e.status_code in (401, 403):
+        if e.status_code == 401:
             return RedirectResponse(url="/login", status_code=302)
         raise
 
 @router.get("/admin/articles", response_class=HTMLResponse)
 async def admin_articles(
     request: Request,
+    db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
     try:
-        admin_user = await get_admin_user(current_user)
+        if not current_user.is_admin:
+            return RedirectResponse(url="/", status_code=302)
+        
         return templates.TemplateResponse("admin/articles.html", {
             "request": request,
-            "user": admin_user
+            "user": current_user
         })
     except HTTPException as e:
-        if e.status_code in (401, 403):
+        if e.status_code == 401:
             return RedirectResponse(url="/login", status_code=302)
         raise
 
 @router.get("/admin/statements", response_class=HTMLResponse)
 async def admin_statements(
     request: Request,
+    db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
     try:
-        admin_user = await get_admin_user(current_user)
+        if not current_user.is_admin:
+            return RedirectResponse(url="/", status_code=302)
+        
         return templates.TemplateResponse("admin/statements.html", {
             "request": request,
-            "user": admin_user
+            "user": current_user
         })
     except HTTPException as e:
-        if e.status_code in (401, 403):
+        if e.status_code == 401:
             return RedirectResponse(url="/login", status_code=302)
         raise
 
@@ -91,7 +95,12 @@ async def get_admin_stats(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    admin_user = await get_admin_user(current_user)
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access admin stats"
+        )
+    
     users_count = await db.execute(select(func.count(User.id)))
     articles_count = await db.execute(select(func.count(Article.id)))
     statements_count = await db.execute(select(func.count(Statement.id)))
@@ -107,7 +116,12 @@ async def get_admin_users(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    admin_user = await get_admin_user(current_user)
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access user management"
+        )
+    
     result = await db.execute(select(User))
     users = result.scalars().all()
     return users
@@ -119,7 +133,12 @@ async def update_user_admin(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    admin_user = await get_admin_user(current_user)
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update users"
+        )
+    
     user = await db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -136,9 +155,13 @@ async def get_admin_articles(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    admin_user = await get_admin_user(current_user)
-    stmt = select(Article).options(selectinload(Article.user))
-    result = await db.execute(stmt)
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access article management"
+        )
+    
+    result = await db.execute(select(Article).options(selectinload(Article.user)))
     articles = result.scalars().all()
     return articles
 
@@ -149,7 +172,12 @@ async def update_article_admin(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    admin_user = await get_admin_user(current_user)
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update articles"
+        )
+    
     article = await db.get(Article, article_id)
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
@@ -166,9 +194,13 @@ async def get_admin_statements(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    admin_user = await get_admin_user(current_user)
-    stmt = select(Statement).options(selectinload(Statement.article))
-    result = await db.execute(stmt)
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access statement management"
+        )
+    
+    result = await db.execute(select(Statement).options(selectinload(Statement.article)))
     statements = result.scalars().all()
     return statements
 
@@ -179,7 +211,12 @@ async def update_statement_admin(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    admin_user = await get_admin_user(current_user)
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update statements"
+        )
+    
     statement = await db.get(Statement, statement_id)
     if not statement:
         raise HTTPException(status_code=404, detail="Statement not found")

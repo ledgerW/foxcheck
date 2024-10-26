@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const registerForm = document.getElementById('register-form');
     const loginForm = document.getElementById('login-form');
     const logoutButton = document.getElementById('logout-button');
@@ -10,11 +10,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const usernameDisplay = document.getElementById('username-display');
     const usernameDisplayMobile = document.getElementById('username-display-mobile');
 
+    // Check if we're on login/register page and redirect if already logged in
+    if (window.location.pathname === '/login' || window.location.pathname === '/register') {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            // Verify the token is valid before redirecting
+            const authStatus = await checkAuthStatus();
+            if (authStatus.authenticated) {
+                window.location.href = '/';
+            }
+        }
+    }
+
     async function checkAdminAccess() {
         const token = localStorage.getItem('access_token');
         if (!token) {
             window.location.href = '/login';
-            return;
+            return false;
         }
 
         try {
@@ -28,35 +40,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 if (!data.authenticated || !data.is_admin) {
                     window.location.href = '/';
-                    return;
+                    return false;
                 }
+                return true;
             } else {
                 localStorage.removeItem('access_token');
                 window.location.href = '/login';
+                return false;
             }
         } catch (error) {
             console.error('Error checking admin access:', error);
             localStorage.removeItem('access_token');
             window.location.href = '/login';
-        }
-    }
-
-    // Check if we're on login/register page and redirect if already logged in
-    if (window.location.pathname === '/login' || window.location.pathname === '/register') {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            // Verify the token is valid before redirecting
-            checkAuthStatus().then(data => {
-                if (data.authenticated) {
-                    window.location.href = '/';
-                }
-            });
+            return false;
         }
     }
 
     // Check if we're on an admin page and verify admin access immediately
     if (window.location.pathname.startsWith('/admin')) {
-        checkAdminAccess();
+        const adminCheck = await checkAdminAccess();
+        if (!adminCheck) {
+            return;
+        }
     }
 
     if (registerForm) {
