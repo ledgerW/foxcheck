@@ -30,22 +30,19 @@ async def create_new_article(
     db_article = await create_article(db=db, article=article, user_id=current_user.id)
 
     statements = await get_statements(article.text)
+    statements = [st for st in statements if st]
 
-    check_tasks = [check_statement(StatementRequest(statement=st)) for st in statements if st]
+    check_tasks = [check_statement(StatementRequest(statement=st)) for st in statements]
     verdicts = await asyncio.gather(*check_tasks)
 
     #all_statements = []
     for statement, verdict in zip(statements, verdicts):
-        #new_refs = [ref | {'source': str(ref['source'])} for ref in verdict.references]
-        #new_refs = [Reference(**json.loads(ref.model_dump_json())) for ref in verdict.references]
         statement_create = Statement(
             content=statement,
             verdict=verdict.verdict,
             explanation=verdict.explanation
         )
-        print(verdict.references[0])
         statement_create.references = json.dumps(verdict.references)
-        #all_statements.append(statement_create)
         db_statement = await create_statement(
             db=db,
             statement=statement_create, 

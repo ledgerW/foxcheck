@@ -32,7 +32,6 @@ async def check_statement(
 ):
     #try:
     _statement = statement.statement
-    print(f"Statement: {_statement}")
     fact_check_chain = (
         {"statement": RunnablePassthrough(), "wiki": wiki_retriever, 'web': web_retriever, 'arxiv': arxiv_retriever}
         | RunnablePassthrough.assign(
