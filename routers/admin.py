@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_session
@@ -23,19 +23,51 @@ async def get_admin_user(current_user: User = Depends(get_current_active_user)):
 # Admin dashboard pages
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_dashboard(request: Request, admin_user: User = Depends(get_admin_user)):
-    return templates.TemplateResponse("admin/dashboard.html", {"request": request})
+    try:
+        return templates.TemplateResponse("admin/dashboard.html", {
+            "request": request,
+            "user": admin_user
+        })
+    except HTTPException as e:
+        if e.status_code == 401:
+            return RedirectResponse(url="/login")
+        raise
 
 @router.get("/admin/users", response_class=HTMLResponse)
 async def admin_users(request: Request, admin_user: User = Depends(get_admin_user)):
-    return templates.TemplateResponse("admin/users.html", {"request": request})
+    try:
+        return templates.TemplateResponse("admin/users.html", {
+            "request": request,
+            "user": admin_user
+        })
+    except HTTPException as e:
+        if e.status_code == 401:
+            return RedirectResponse(url="/login")
+        raise
 
 @router.get("/admin/articles", response_class=HTMLResponse)
 async def admin_articles(request: Request, admin_user: User = Depends(get_admin_user)):
-    return templates.TemplateResponse("admin/articles.html", {"request": request})
+    try:
+        return templates.TemplateResponse("admin/articles.html", {
+            "request": request,
+            "user": admin_user
+        })
+    except HTTPException as e:
+        if e.status_code == 401:
+            return RedirectResponse(url="/login")
+        raise
 
 @router.get("/admin/statements", response_class=HTMLResponse)
 async def admin_statements(request: Request, admin_user: User = Depends(get_admin_user)):
-    return templates.TemplateResponse("admin/statements.html", {"request": request})
+    try:
+        return templates.TemplateResponse("admin/statements.html", {
+            "request": request,
+            "user": admin_user
+        })
+    except HTTPException as e:
+        if e.status_code == 401:
+            return RedirectResponse(url="/login")
+        raise
 
 # Admin API endpoints
 @router.get("/api/admin/stats")

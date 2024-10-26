@@ -10,6 +10,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const usernameDisplay = document.getElementById('username-display');
     const usernameDisplayMobile = document.getElementById('username-display-mobile');
 
+    // Add admin access check function
+    async function checkAdminAccess() {
+        try {
+            const response = await fetch('/api/auth/status', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (!data.authenticated || !data.is_admin) {
+                    window.location.href = '/';
+                }
+            } else {
+                window.location.href = '/login';
+            }
+        } catch (error) {
+            console.error('Error checking admin access:', error);
+            window.location.href = '/login';
+        }
+    }
+
     // Check if we're on login/register page and redirect if already logged in
     if (window.location.pathname === '/login' || window.location.pathname === '/register') {
         const token = localStorage.getItem('access_token');
@@ -25,16 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Check if we're on an admin page and verify admin access
     if (window.location.pathname.startsWith('/admin')) {
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-            window.location.href = '/login';
-        } else {
-            checkAuthStatus().then(data => {
-                if (!data.authenticated || !data.is_admin) {
-                    window.location.href = '/';
-                }
-            });
-        }
+        checkAdminAccess();
     }
 
     if (registerForm) {
