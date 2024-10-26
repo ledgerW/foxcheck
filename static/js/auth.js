@@ -2,13 +2,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const registerForm = document.getElementById('register-form');
     const loginForm = document.getElementById('login-form');
     const logoutButton = document.getElementById('logout-button');
-    const logoutButtonMobile = document.getElementById('logout-button-mobile');
     const loggedOutMenu = document.getElementById('logged-out-menu');
     const loggedInMenu = document.getElementById('logged-in-menu');
-    const loggedOutMenuMobile = document.getElementById('logged-out-menu-mobile');
-    const loggedInMenuMobile = document.getElementById('logged-in-menu-mobile');
     const usernameDisplay = document.getElementById('username-display');
-    const usernameDisplayMobile = document.getElementById('username-display-mobile');
 
     // Check if we're on login/register page and redirect if already logged in
     if (window.location.pathname === '/login' || window.location.pathname === '/register') {
@@ -16,8 +12,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (token) {
             const authStatus = await checkAuthStatus();
             if (authStatus.authenticated) {
-                window.location.href = '/';
+                // If user is admin and was trying to access admin page before login
+                const previousPath = sessionStorage.getItem('previous_path');
+                if (previousPath && previousPath.startsWith('/admin') && authStatus.is_admin) {
+                    window.location.href = previousPath;
+                    sessionStorage.removeItem('previous_path');
+                } else {
+                    window.location.href = '/';
+                }
             }
+        }
+    }
+
+    // Check if we're on an admin page and verify admin access
+    if (window.location.pathname.startsWith('/admin')) {
+        const adminCheck = await checkAdminAccess();
+        if (!adminCheck) {
+            return;
         }
     }
 
@@ -57,6 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const token = localStorage.getItem('access_token');
             if (!token) {
+                sessionStorage.setItem('previous_path', window.location.pathname);
                 window.location.href = '/login';
                 return false;
             }
@@ -76,22 +88,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return true;
             } else {
                 localStorage.removeItem('access_token');
+                sessionStorage.setItem('previous_path', window.location.pathname);
                 window.location.href = '/login';
                 return false;
             }
         } catch (error) {
             console.error('Error checking admin access:', error);
             localStorage.removeItem('access_token');
+            sessionStorage.setItem('previous_path', window.location.pathname);
             window.location.href = '/login';
             return false;
-        }
-    }
-
-    // Check if we're on an admin page and verify admin access immediately
-    if (window.location.pathname.startsWith('/admin')) {
-        const adminCheck = await checkAdminAccess();
-        if (!adminCheck) {
-            return;
         }
     }
 
@@ -105,10 +111,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (logoutButton) {
         logoutButton.addEventListener('click', handleLogout);
-    }
-
-    if (logoutButtonMobile) {
-        logoutButtonMobile.addEventListener('click', handleLogout);
     }
 
     async function handleRegister(e) {
@@ -189,12 +191,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateUIForLoggedInState(username, isAdmin) {
         if (loggedOutMenu) loggedOutMenu.style.display = 'none';
         if (loggedInMenu) loggedInMenu.style.display = 'block';
-        if (loggedOutMenuMobile) loggedOutMenuMobile.style.display = 'none';
-        if (loggedInMenuMobile) loggedInMenuMobile.style.display = 'block';
         if (usernameDisplay) usernameDisplay.textContent = username;
-        if (usernameDisplayMobile) usernameDisplayMobile.textContent = username;
         
-        // Update admin UI elements
+        // Update admin menu items visibility
         const adminMenuItems = document.querySelectorAll('.admin-menu-item');
         adminMenuItems.forEach(item => {
             item.style.display = isAdmin ? 'block' : 'none';
@@ -204,10 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateUIForLoggedOutState() {
         if (loggedOutMenu) loggedOutMenu.style.display = 'block';
         if (loggedInMenu) loggedInMenu.style.display = 'none';
-        if (loggedOutMenuMobile) loggedOutMenuMobile.style.display = 'block';
-        if (loggedInMenuMobile) loggedInMenuMobile.style.display = 'none';
         if (usernameDisplay) usernameDisplay.textContent = '';
-        if (usernameDisplayMobile) usernameDisplayMobile.textContent = '';
 
         // If on admin page, store the path and redirect
         if (window.location.pathname.startsWith('/admin')) {

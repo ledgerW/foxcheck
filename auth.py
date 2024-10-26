@@ -37,30 +37,35 @@ async def get_current_user(
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
+            print("No username found in token payload.")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
         stmt = select(User).where(User.username == username)
         result = await db.execute(stmt)
         user = result.scalars().first()
-        
+
         if user is None:
+            print("User not found in database.")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User not found",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
+        print(f"Authenticated user: {user.username}")
         return user
-    except JWTError:
+    except JWTError as e:
+        print(f"JWT error: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
 
 async def get_current_active_user(
     current_user: User = Depends(get_current_user)
