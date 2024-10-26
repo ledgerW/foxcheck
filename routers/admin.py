@@ -12,99 +12,60 @@ from sqlalchemy.orm import selectinload
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
-# Admin dashboard pages
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_dashboard(
     request: Request,
-    db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    print(f"Admin dashboard access attempt - Headers: {dict(request.headers)}")
-    try:
-        if not current_user:
-            print("No current user found")
-            return RedirectResponse(url="/login", status_code=302)
-            
-        print(f"User authenticated: {current_user.username}, is_admin: {current_user.is_admin}")
-        if not current_user.is_admin:
-            print(f"User {current_user.username} is not admin")
-            return RedirectResponse(url="/", status_code=302)
-        
-        return templates.TemplateResponse("admin/dashboard.html", {
-            "request": request,
-            "user": current_user
-        })
-    except HTTPException as e:
-        print(f"HTTP Exception in admin_dashboard: {e.detail}")
-        if e.status_code == 401:
-            return RedirectResponse(url="/login", status_code=302)
-        raise
-    except Exception as e:
-        print(f"Unexpected error in admin_dashboard: {str(e)}")
-        raise
+    print(f"Admin access attempt - Headers: {dict(request.headers)}")
+    print(f"Current user: {current_user.username} (admin: {current_user.is_admin})")
+    
+    if not current_user.is_admin:
+        return RedirectResponse(url="/", status_code=302)
+    
+    return templates.TemplateResponse("admin/dashboard.html", {
+        "request": request,
+        "user": current_user
+    })
 
 @router.get("/admin/users", response_class=HTMLResponse)
 async def admin_users(
     request: Request,
-    db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    try:
-        if not current_user:
-            return RedirectResponse(url="/login", status_code=302)
-        if not current_user.is_admin:
-            return RedirectResponse(url="/", status_code=302)
-        
-        return templates.TemplateResponse("admin/users.html", {
-            "request": request,
-            "user": current_user
-        })
-    except HTTPException as e:
-        if e.status_code == 401:
-            return RedirectResponse(url="/login", status_code=302)
-        raise
+    if not current_user.is_admin:
+        return RedirectResponse(url="/", status_code=302)
+    
+    return templates.TemplateResponse("admin/users.html", {
+        "request": request,
+        "user": current_user
+    })
 
 @router.get("/admin/articles", response_class=HTMLResponse)
 async def admin_articles(
     request: Request,
-    db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    try:
-        if not current_user:
-            return RedirectResponse(url="/login", status_code=302)
-        if not current_user.is_admin:
-            return RedirectResponse(url="/", status_code=302)
-        
-        return templates.TemplateResponse("admin/articles.html", {
-            "request": request,
-            "user": current_user
-        })
-    except HTTPException as e:
-        if e.status_code == 401:
-            return RedirectResponse(url="/login", status_code=302)
-        raise
+    if not current_user.is_admin:
+        return RedirectResponse(url="/", status_code=302)
+    
+    return templates.TemplateResponse("admin/articles.html", {
+        "request": request,
+        "user": current_user
+    })
 
 @router.get("/admin/statements", response_class=HTMLResponse)
 async def admin_statements(
     request: Request,
-    db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    try:
-        if not current_user:
-            return RedirectResponse(url="/login", status_code=302)
-        if not current_user.is_admin:
-            return RedirectResponse(url="/", status_code=302)
-        
-        return templates.TemplateResponse("admin/statements.html", {
-            "request": request,
-            "user": current_user
-        })
-    except HTTPException as e:
-        if e.status_code == 401:
-            return RedirectResponse(url="/login", status_code=302)
-        raise
+    if not current_user.is_admin:
+        return RedirectResponse(url="/", status_code=302)
+    
+    return templates.TemplateResponse("admin/statements.html", {
+        "request": request,
+        "user": current_user
+    })
 
 # Admin API endpoints
 @router.get("/api/admin/stats")
@@ -112,20 +73,20 @@ async def get_admin_stats(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user or not current_user.is_admin:
+    if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access admin stats"
         )
     
-    users_count = await db.execute(select(func.count(User.id)))
-    articles_count = await db.execute(select(func.count(Article.id)))
-    statements_count = await db.execute(select(func.count(Statement.id)))
+    users_count = await db.scalar(select(func.count(User.id)))
+    articles_count = await db.scalar(select(func.count(Article.id)))
+    statements_count = await db.scalar(select(func.count(Statement.id)))
     
     return {
-        "users_count": users_count.scalar(),
-        "articles_count": articles_count.scalar(),
-        "statements_count": statements_count.scalar()
+        "users_count": users_count,
+        "articles_count": articles_count,
+        "statements_count": statements_count
     }
 
 @router.get("/api/admin/users")
@@ -133,7 +94,7 @@ async def get_admin_users(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user or not current_user.is_admin:
+    if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access user management"
@@ -150,7 +111,7 @@ async def update_user_admin(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user or not current_user.is_admin:
+    if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update users"
@@ -172,7 +133,7 @@ async def get_admin_articles(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user or not current_user.is_admin:
+    if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access article management"
@@ -189,7 +150,7 @@ async def update_article_admin(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user or not current_user.is_admin:
+    if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update articles"
@@ -211,7 +172,7 @@ async def get_admin_statements(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user or not current_user.is_admin:
+    if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access statement management"
@@ -228,7 +189,7 @@ async def update_statement_admin(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    if not current_user or not current_user.is_admin:
+    if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update statements"

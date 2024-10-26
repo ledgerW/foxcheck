@@ -11,6 +11,8 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.authentication import AuthenticationMiddleware
+from auth_backend import JWTAuthBackend
 from starlette.types import ASGIApp
 from auth import get_current_active_user
 from pydantic import BaseModel, Field
@@ -45,9 +47,12 @@ app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 # Security Headers middleware
 app.add_middleware(SecurityHeadersMiddleware)
 
+# Authentication middleware with custom backend
+app.add_middleware(AuthenticationMiddleware, backend=JWTAuthBackend())
+
 # Rate Limiting
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Include routers
 app.include_router(users.router)
