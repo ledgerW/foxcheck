@@ -15,27 +15,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('access_token');
         if (token) {
             // Verify the token is valid before redirecting
-            fetch('/api/auth/status', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                // If token is invalid, remove it
-                localStorage.removeItem('access_token');
-                throw new Error('Invalid token');
-            })
-            .then(data => {
+            checkAuthStatus().then(data => {
                 if (data.authenticated) {
                     window.location.href = '/';
                 }
-            })
-            .catch(error => {
-                console.error('Auth check error:', error);
-                localStorage.removeItem('access_token');
+            });
+        }
+    }
+
+    // Check if we're on an admin page and verify admin access
+    if (window.location.pathname.startsWith('/admin')) {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = '/login';
+        } else {
+            checkAuthStatus().then(data => {
+                if (!data.authenticated || !data.is_admin) {
+                    window.location.href = '/';
+                }
             });
         }
     }
@@ -104,8 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const data = await response.json();
                 localStorage.setItem('access_token', data.access_token);
-                await checkAuthStatus();
-                window.location.href = '/';
+                const authStatus = await checkAuthStatus();
+                if (authStatus.authenticated) {
+                    window.location.href = '/';
+                }
             } else {
                 const errorData = await response.json();
                 alert(`Login failed: ${errorData.detail}`);
@@ -127,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('access_token');
             if (!token) {
                 updateUIForLoggedOutState();
-                return;
+                return { authenticated: false };
             }
 
             const response = await fetch('/api/auth/status', {
@@ -139,29 +138,41 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const data = await response.json();
                 if (data.authenticated) {
-                    updateUIForLoggedInState(data.username);
+                    updateUIForLoggedInState(data.username, data.is_admin);
+                    return data;
                 } else {
                     localStorage.removeItem('access_token');
                     updateUIForLoggedOutState();
+                    return { authenticated: false };
                 }
             } else {
-                localStorage.removeItem('access_token');
+                if (response.status === 401) {
+                    localStorage.removeItem('access_token');
+                }
                 updateUIForLoggedOutState();
+                return { authenticated: false };
             }
         } catch (error) {
             console.error('Error checking auth status:', error);
             localStorage.removeItem('access_token');
             updateUIForLoggedOutState();
+            return { authenticated: false };
         }
     }
 
-    function updateUIForLoggedInState(username) {
+    function updateUIForLoggedInState(username, isAdmin) {
         if (loggedOutMenu) loggedOutMenu.style.display = 'none';
         if (loggedInMenu) loggedInMenu.style.display = 'block';
         if (loggedOutMenuMobile) loggedOutMenuMobile.style.display = 'none';
         if (loggedInMenuMobile) loggedInMenuMobile.style.display = 'block';
         if (usernameDisplay) usernameDisplay.textContent = username;
         if (usernameDisplayMobile) usernameDisplayMobile.textContent = username;
+        
+        // Update admin UI elements
+        const adminMenuItems = document.querySelectorAll('.admin-menu-item');
+        adminMenuItems.forEach(item => {
+            item.style.display = isAdmin ? 'block' : 'none';
+        });
     }
 
     function updateUIForLoggedOutState() {

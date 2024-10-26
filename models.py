@@ -1,7 +1,11 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
+from pydantic import AnyHttpUrl, validator
 from datetime import datetime
 import json
+
+from schemas import Reference
+
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -13,43 +17,39 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     articles: List["Article"] = Relationship(back_populates="user")
 
+
 class Statement(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     content: str = Field(index=True)
     verdict: Optional[str] = Field(default=None)
     explanation: Optional[str] = Field(default=None)
-    references: Optional[str] = Field(default=None)  # JSON string field
+    references: Optional[str] = Field(default="[]")  # Store as JSON string in the database
     created_at: datetime = Field(default_factory=datetime.utcnow)
     article_id: Optional[int] = Field(default=None, foreign_key="article.id")
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
-    
+
     article: Optional["Article"] = Relationship(back_populates="statements")
 
-    def get_references(self) -> List[dict]:
-        if not self.references:
-            return []
-        try:
-            return json.loads(self.references) if isinstance(self.references, str) else []
-        except (json.JSONDecodeError, TypeError):
-            return []
+    @validator("references", pre=True, always=True)
+    def parse_references(cls, v):
+        # If references is a JSON string, parse it to a list
+        if isinstance(v, str):
+            try:
+                return json.loads(v)  # Convert JSON string to list
+            except json.JSONDecodeError:
+                return []  # Return empty list if JSON parsing fails
+        return v or []
 
     def set_references(self, references: List[dict]) -> None:
+        # Converts a list of dictionaries to a JSON string for storage
         if references is None:
-            self.references = None
+            self.references = '[]'
         else:
             try:
-                # Ensure each reference has the required fields
-                formatted_refs = []
-                for ref in references:
-                    formatted_ref = {
-                        'title': ref.get('title', ''),
-                        'source': ref.get('source', ''),
-                        'summary': ref.get('summary', '')
-                    }
-                    formatted_refs.append(formatted_ref)
-                self.references = json.dumps(formatted_refs)
+                self.references = json.dumps(references)
             except (TypeError, ValueError):
-                self.references = None
+                self.references = '[]'
+
 
 class Article(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -59,24 +59,28 @@ class Article(SQLModel, table=True):
     user_id: int = Field(foreign_key="user.id")
     is_active: bool = Field(default=True)
     domain: Optional[str] = Field(max_length=500, unique=True, index=True)
-    links: Optional[str] = Field(default='[]')  # Default to empty JSON array
+    links: Optional[str] = Field(default="[]")  # Store as JSON string
     authors: Optional[str] = Field(max_length=1000)
     publication_date: Optional[datetime]
     extraction_date: datetime = Field(default_factory=datetime.utcnow)
-    
+
     user: Optional[User] = Relationship(back_populates="articles")
     statements: List[Statement] = Relationship(back_populates="article", sa_relationship_kwargs={"lazy": "joined"})
 
-    def get_links(self) -> List[str]:
-        if not self.links:
-            return []
-        try:
-            return json.loads(self.links) if isinstance(self.links, str) else []
-        except json.JSONDecodeError:
-            return []
+    @validator("links", pre=True, always=True)
+    def parse_links(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return []
+        return v
 
     def set_links(self, links: List[str]) -> None:
         if links is None:
-            self.links = '[]'  # Default to empty JSON array
+            self.links = '[]'
         else:
-            self.links = json.dumps(links)
+            try:
+                self.links = json.dumps(links)
+            except (TypeError, ValueError):
+                self.links = '[]'

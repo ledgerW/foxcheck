@@ -146,6 +146,15 @@ wheels = [
 ]
 
 [[package]]
+name = "asyncio"
+version = "3.4.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/da/54/054bafaf2c0fb8473d423743e191fcdf49b2c1fd5e9af3524efbe097bafd/asyncio-3.4.3.tar.gz", hash = "sha256:83360ff8bc97980e4ff25c964c7bd3923d333d177aa4f7fb736b019f26c7cb41", size = 204411 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/22/74/07679c5b9f98a7cb0fc147b1ef1cc1853bc07a4eb9cb5731e24732c5f773/asyncio-3.4.3-py3-none-any.whl", hash = "sha256:c4d18b22701821de07bd6aea8b53d21449ec0ec5680645e5317062ea21817d2d", size = 101767 },
+]
+
+[[package]]
 name = "asyncpg"
 version = "0.30.0"
 source = { registry = "https://pypi.org/simple" }
@@ -397,6 +406,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/fc/f8/98eea607f65de6527
 wheels = [
     { url = "https://files.pythonhosted.org/packages/12/b3/231ffd4ab1fc9d679809f356cebee130ac7daa00d6d6f3206dd4fd137e9e/distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2", size = 20277 },
 ]
+
+[[package]]
+name = "django-routers"
+version = "0.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/32/fe/4c23c1f4ed881460512e81963d3433b7b525793136193ca37d3af4de035a/django-routers-0.2.tar.gz", hash = "sha256:eeb176cbb46a83454d96a5239e1bb1334914f7f5f595f4692f2684a0ee128fe6", size = 2185 }
 
 [[package]]
 name = "dnspython"
@@ -1757,9 +1772,11 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "arxiv" },
+    { name = "asyncio" },
     { name = "asyncpg" },
     { name = "bcrypt" },
     { name = "chainlit" },
+    { name = "django-routers" },
     { name = "email-validator" },
     { name = "fastapi" },
     { name = "jinja2" },
@@ -1784,7 +1801,9 @@ dependencies = [
     { name = "slowapi" },
     { name = "sqlalchemy" },
     { name = "sqlmodel" },
+    { name = "starlette" },
     { name = "tavily-python" },
+    { name = "tenacity" },
     { name = "tiktoken" },
     { name = "uvicorn" },
     { name = "wikipedia" },
@@ -1793,9 +1812,11 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "arxiv", specifier = ">=2.1.3" },
+    { name = "asyncio", specifier = ">=3.4.3" },
     { name = "asyncpg", specifier = ">=0.30.0" },
     { name = "bcrypt", specifier = ">=4.2.0" },
     { name = "chainlit", specifier = ">=1.2.0" },
+    { name = "django-routers", specifier = ">=0.2" },
     { name = "email-validator", specifier = ">=2.2.0" },
     { name = "fastapi", specifier = ">=0.112.4" },
     { name = "jinja2", specifier = ">=3.1.4" },
@@ -1820,7 +1841,9 @@ requires-dist = [
     { name = "slowapi", specifier = ">=0.1.9" },
     { name = "sqlalchemy", specifier = ">=2.0.36" },
     { name = "sqlmodel", specifier = ">=0.0.22" },
+    { name = "starlette", specifier = ">=0.37.2" },
     { name = "tavily-python", specifier = ">=0.5.0" },
+    { name = "tenacity", specifier = ">=9.0.0" },
     { name = "tiktoken", specifier = ">=0.8.0" },
     { name = "uvicorn", specifier = ">=0.25.0" },
     { name = "wikipedia", specifier = ">=1.4.0" },

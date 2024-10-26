@@ -4,6 +4,7 @@ from sqlalchemy.pool import AsyncAdaptedQueuePool
 from sqlalchemy import text
 from config import settings
 import re
+import json
 import logging
 from tenacity import retry, stop_after_attempt, wait_exponential
 from contextlib import asynccontextmanager
@@ -117,7 +118,7 @@ async def seed_sample_articles(session: AsyncSession):
             {
                 "title": "Climate Change Impact on Ocean Levels",
                 "text": "Recent studies show significant changes in ocean levels across the globe.",
-                "domain": "climate-science.org",
+                "domain": "http://climate-science.org/climate-change-impact-on-ocean",
                 "authors": "Dr. Jane Smith, Dr. John Doe",
                 "publication_date": datetime.utcnow() - timedelta(days=5),
                 "statements": [

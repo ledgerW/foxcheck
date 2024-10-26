@@ -19,12 +19,15 @@ class VerdictEnum(str, Enum):
     mostly_false = 'Mostly False'
     false = 'False'
 
+    def __str__(self):
+        return str(self.value)
+
 
 class VerdictRefs(TypedDict):
     """References that support the verdict."""
     
     title: Annotated[str, ..., "The title of the reference"]
-    source: Annotated[AnyHttpUrl, ..., "The source URL of the reference"]
+    source: Annotated[str, ..., "The source URL of the reference"]
     summary: Annotated[str, ..., "Brief summary of the justifying content in the reference material."]
 
 

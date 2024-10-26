@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr, validator
-from typing import Optional, List
+from pydantic import BaseModel, EmailStr, validator, AnyHttpUrl
+from typing import Optional, List, Any
+from typing_extensions import TypedDict
 from datetime import datetime
 import json
 
@@ -28,9 +29,9 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 # Reference schema (used within Statement)
-class Reference(BaseModel):
-    title: Optional[str] = None
-    source: str
+class Reference(TypedDict):
+    title: str
+    source: AnyHttpUrl
     summary: str
 
 # Statement schemas
@@ -40,25 +41,30 @@ class StatementBase(BaseModel):
     explanation: Optional[str] = None
     references: Optional[List[Reference]] = None
 
+class StatementRequest(BaseModel):
+    statement: str
+
 class StatementCreate(StatementBase):
     pass
 
-class StatementRead(StatementBase):
+class Reference(BaseModel):
+    title: str
+    source: str
+    summary: Optional[str] = None
+
+class StatementRead(BaseModel):
     id: int
+    content: str
+    verdict: Optional[str] = None
+    explanation: Optional[str] = None
+    references: List[Reference] = []  # Expect this as a list in the response
     created_at: datetime
-    article_id: int
-    user_id: int
-    references: Optional[List[Reference]] = []
+    article_id: Optional[int] = None
+    user_id: Optional[int] = None
 
-    class Config:
-        from_attributes = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
-
-    @validator('references', pre=True)
+    @validator("references", pre=True)
     def parse_references(cls, v):
-        if isinstance(v, str):
+        if isinstance(v, str):  # Parse JSON string to list
             try:
                 return json.loads(v)
             except json.JSONDecodeError:
@@ -76,13 +82,18 @@ class ArticleBase(BaseModel):
 class ArticleCreate(ArticleBase):
     links: Optional[List[str]] = []
 
-class ArticleRead(ArticleBase):
+class ArticleRead(BaseModel):
     id: int
+    title: str
+    text: str
+    domain: Optional[str] = None
+    authors: Optional[str] = None
+    publication_date: Optional[datetime] = None
     date: datetime
     user_id: int
     is_active: bool = True
     extraction_date: Optional[datetime] = None
-    statements: List[StatementRead] = []
+    statements: List[StatementRead] = []  # Use StatementRead to ensure correct parsing
     links: List[str] = []
 
     class Config:
@@ -100,11 +111,6 @@ class ArticleRead(ArticleBase):
                 return []
         return v or []
 
-    @validator('statements', pre=True)
-    def ensure_statements_list(cls, v):
-        if v is None:
-            return []
-        return v
 
 class ArticleUpdate(BaseModel):
     title: Optional[str] = None

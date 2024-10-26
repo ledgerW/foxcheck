@@ -1,10 +1,11 @@
+from pydantic import AnyHttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy import update, delete
 from typing import Optional, List
 from models import User, Article, Statement
-from schemas import UserCreate, UserUpdate, ArticleCreate, ArticleUpdate, StatementCreate
+from schemas import UserCreate, UserUpdate, ArticleCreate, ArticleUpdate, StatementCreate, Reference
 from auth import get_password_hash
 import json
 from sqlalchemy.exc import IntegrityError
@@ -50,7 +51,7 @@ async def delete_user(db: AsyncSession, user: User):
     await db.commit()
 
 # Article CRUD operations
-async def check_domain_exists(db: AsyncSession, domain: str) -> bool:
+async def check_domain_exists(db: AsyncSession, domain: AnyHttpUrl) -> bool:
     if domain:
         result = await db.execute(
             select(Article).where(Article.domain == domain)
@@ -58,12 +59,15 @@ async def check_domain_exists(db: AsyncSession, domain: str) -> bool:
         return result.scalar_one_or_none() is not None
     return False
 
+
 async def create_article(db: AsyncSession, article: ArticleCreate, user_id: int):
     # Check for existing domain if provided
     if article.domain and await check_domain_exists(db, article.domain):
         raise ValueError(f"An article with domain '{article.domain}' already exists")
 
-    links_json = json.dumps(article.links) if article.links else None
+    # Convert links to JSON string if provided
+    links_json = json.dumps(article.links) if article.links else "[]"
+
     db_article = Article(
         title=article.title,
         text=article.text,
@@ -71,15 +75,15 @@ async def create_article(db: AsyncSession, article: ArticleCreate, user_id: int)
         authors=article.authors,
         publication_date=article.publication_date,
         user_id=user_id,
-        links=links_json,
+        links=links_json,  # Pass JSON string instead of list
         is_active=True
     )
-    
+
     try:
         db.add(db_article)
         await db.commit()
         await db.refresh(db_article)
-        
+
         # Explicitly load relationships
         stmt = select(Article).options(
             joinedload(Article.statements)
@@ -91,6 +95,7 @@ async def create_article(db: AsyncSession, article: ArticleCreate, user_id: int)
         if "duplicate key value violates unique constraint" in str(e):
             raise ValueError(f"An article with domain '{article.domain}' already exists")
         raise
+
 
 async def get_article(db: AsyncSession, article_id: int):
     stmt = (
@@ -140,20 +145,16 @@ async def delete_article(db: AsyncSession, article: Article):
     await db.commit()
 
 # Statement CRUD operations
-async def create_statement(db: AsyncSession, statement: StatementCreate, article_id: int, user_id: int):
-    references_json = json.dumps(statement.references) if hasattr(statement, 'references') else None
-    db_statement = Statement(
-        content=statement.content,
-        verdict=statement.verdict,
-        explanation=statement.explanation,
-        references=references_json,
-        article_id=article_id,
-        user_id=user_id
-    )
-    db.add(db_statement)
+async def create_statement(db: AsyncSession, statement: Statement, article_id: int, user_id: int):
+    # Set the article_id and user_id for the statement
+    statement.article_id = article_id
+    statement.user_id = user_id
+
+    # Add and commit the statement to the database
+    db.add(statement)
     await db.commit()
-    await db.refresh(db_statement)
-    return db_statement
+    await db.refresh(statement)
+    return statement
 
 async def get_statement(db: AsyncSession, statement_id: int):
     stmt = select(Statement).where(Statement.id == statement_id)
@@ -170,11 +171,12 @@ async def get_article_statements(db: AsyncSession, article_id: int):
     result = await db.execute(stmt)
     return result.scalars().all()
 
-async def update_statement(db: AsyncSession, statement: Statement, verdict: str, explanation: str, references: List[dict] = None):
+async def update_statement(db: AsyncSession, statement: Statement, verdict: str, explanation: str, references: List[Reference] = None):
     statement.verdict = verdict
     statement.explanation = explanation
-    if references is not None:
-        statement.set_references(references)
+    statement.references = references
+    #if references is not None:
+    #    statement.set_references(references)
     await db.commit()
     await db.refresh(statement)
     return statement

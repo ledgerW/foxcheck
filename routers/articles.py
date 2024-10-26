@@ -3,11 +3,20 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from database import get_session
-from schemas import ArticleCreate, ArticleRead, ArticleUpdate, Reference
-from models import User, Article
-from crud import create_article, get_article, get_articles, update_article, delete_article
+from schemas import ArticleCreate, ArticleRead, ArticleUpdate, StatementRequest
+from models import User, Article, Statement
+from crud import (
+    create_article,
+    get_article,
+    get_articles,
+    update_article,
+    delete_article,
+    create_statement
+)
 from auth import get_current_active_user
+from routers.api import get_statements, check_statement
 import json
+import asyncio
 
 router = APIRouter(prefix="/api/articles", tags=["articles"])
 
@@ -17,21 +26,46 @@ async def create_new_article(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    try:
-        db_article = await create_article(db=db, article=article, user_id=current_user.id)
-        return db_article
-    except ValueError as e:
-        # Return JSON response instead of raising exception
-        return JSONResponse(
-            status_code=status.HTTP_409_CONFLICT,
-            content={'status': 'error', 'message': str(e)}
+    #try:
+    db_article = await create_article(db=db, article=article, user_id=current_user.id)
+
+    statements = await get_statements(article.text)
+
+    check_tasks = [check_statement(StatementRequest(statement=st)) for st in statements if st]
+    verdicts = await asyncio.gather(*check_tasks)
+
+    #all_statements = []
+    for statement, verdict in zip(statements, verdicts):
+        #new_refs = [ref | {'source': str(ref['source'])} for ref in verdict.references]
+        #new_refs = [Reference(**json.loads(ref.model_dump_json())) for ref in verdict.references]
+        statement_create = Statement(
+            content=statement,
+            verdict=verdict.verdict,
+            explanation=verdict.explanation
         )
-    except Exception as e:
-        await db.rollback()
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={'status': 'error', 'message': str(e)}
+        print(verdict.references[0])
+        statement_create.references = json.dumps(verdict.references)
+        #all_statements.append(statement_create)
+        db_statement = await create_statement(
+            db=db,
+            statement=statement_create, 
+            article_id=db_article.id, 
+            user_id=current_user.id
         )
+        
+    return db_article
+    #except ValueError as e:
+    #    # Return JSON response instead of raising exception
+    #    return JSONResponse(
+    #        status_code=status.HTTP_409_CONFLICT,
+    #        content={'status': 'error', 'message': str(e)}
+    #    )
+    #except Exception as e:
+    #    await db.rollback()
+    #    return JSONResponse(
+    #        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #        content={'status': 'error', 'message': str(e)}
+    #    )
 
 @router.get("", response_model=List[ArticleRead])
 async def read_articles(

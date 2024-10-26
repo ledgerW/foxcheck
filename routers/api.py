@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import List
 from typing_extensions import TypedDict
 
-import json
+from schemas import StatementRequest
 from chains.statement_chain import get_statements as _get_statements
 from chains.wikipedia_chain import retriever as wiki_retriever
 from chains.tavily_chain import retriever as web_retriever
@@ -20,54 +20,46 @@ from operator import itemgetter
 router = APIRouter(prefix="/api", tags=["api"])
 
 
-class Statement(BaseModel):
-    statement: str
-
-class Content(BaseModel):
-    content: str
-
-class Statements(TypedDict):
-    statements: List[str]
+#class Statement(BaseModel):
+#    statement: str
 
 
-@router.post("/check_statement")
+@router.post("/check_statement", response_model=Verdict)
 async def check_statement(
-    statement: Statement,
+    statement: StatementRequest,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_session)
-) -> Verdict:
-    try:
-        statement = statement.statement
-        print(f"Statement: {statement}")
-        fact_check_chain = (
-            {"statement": RunnablePassthrough(), "wiki": wiki_retriever, 'web': web_retriever, 'arxiv': arxiv_retriever}
-            | RunnablePassthrough.assign(
-                statement=itemgetter('statement'),
-                wiki=itemgetter('wiki'),
-                web=itemgetter('web'),
-                arxiv=itemgetter('arxiv')
-            )
-            | judge_chain
+):
+    #try:
+    _statement = statement.statement
+    print(f"Statement: {_statement}")
+    fact_check_chain = (
+        {"statement": RunnablePassthrough(), "wiki": wiki_retriever, 'web': web_retriever, 'arxiv': arxiv_retriever}
+        | RunnablePassthrough.assign(
+            statement=itemgetter('statement'),
+            wiki=itemgetter('wiki'),
+            web=itemgetter('web'),
+            arxiv=itemgetter('arxiv')
         )
+        | judge_chain
+    )
 
-        verdict = await fact_check_chain.ainvoke(statement)
-        return verdict
+    verdict = await fact_check_chain.ainvoke(_statement)
+    return verdict
         #print(json.loads(verdict.model_dump_json()))
         #return json.loads(verdict.model_dump_json())
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    #except Exception as e:
+    #    raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/get_statements")
+@router.post("/get_statements", response_model=List[str])
 async def get_statements(
-    content: Content,
+    content: str,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_session)
-) -> Statements:
-    try:
-        content = content.content
-        _statements = await _get_statements(content)
-        statements: Statements = {'statements': _statements}
-        return statements
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+):
+    #try:
+    statements = await _get_statements(content)
+    return statements
+    #except Exception as e:
+    #    raise HTTPException(status_code=500, detail=str(e))

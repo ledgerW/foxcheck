@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 },
-                body: JSON.stringify({ statement: query }),
+                body: JSON.stringify({ statement: query })
             });
 
             if (response.status === 401) {

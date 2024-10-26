@@ -52,7 +52,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.include_router(users.router)
 app.include_router(api.router)
 app.include_router(articles.router)
-app.include_router(admin.router)  # Added admin router
+app.include_router(admin.router)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -88,7 +88,11 @@ async def login_page(request: Request):
 
 @app.get("/api/auth/status")
 async def auth_status(current_user: dict = Depends(get_current_active_user)):
-    return {"authenticated": True, "username": current_user.username}
+    return {
+        "authenticated": True,
+        "username": current_user.username,
+        "is_admin": current_user.is_admin
+    }
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

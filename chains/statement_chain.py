@@ -11,24 +11,24 @@ load_dotenv()
 
 from langchain_openai import ChatOpenAI
 
+
 llm = ChatOpenAI(model="gpt-4o", streaming=True)
 
 
 prompt = ChatPromptTemplate.from_template(
     """
-    Article:
-    {article}
+Article:
+{article}
 
 
-    You are a journalist on the prestigious fact-checking team at a major news publication. Journalistic integrity is paramount. 
-    From the Article above, extract all of the verifiable statements. Your team will research each of these statements to evaluate
-    how accurate and reasonable they are.
+You are a journalist on the prestigious fact-checking team at a major news publication. Journalistic integrity is paramount. 
+From the Article above, extract all of the verifiable statements. Your team will research each of these statements to evaluate how accurate and reasonable they are.
     
-    Make sure each statement contains all the necessary information, names, descriptions, etc..., so it can be understood and
-    verified in isolation without referring back to the Article.
+Make sure each statement contains all the necessary information, names, descriptions, etc..., so it can be understood and verified in isolation without referring back to the Article. Also make sure that you only extract
+statements that are significant to the story and interesting to the reader.
 
-    Return an un-numbered and un-hyphenated list of all the statements.
-    Each statement should be on a new line.
+Return an un-numbered and un-hyphenated list of all the statements.
+Each statement should be on a new line.
     """
 )
 
