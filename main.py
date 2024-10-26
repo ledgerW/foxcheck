@@ -15,6 +15,7 @@ from starlette.types import ASGIApp
 from auth import get_current_active_user
 from pydantic import BaseModel, Field
 from typing import List
+from models import User
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -46,7 +47,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 # Rate Limiting
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
 
 # Include routers
 app.include_router(users.router)
@@ -87,7 +88,7 @@ async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 @app.get("/api/auth/status")
-async def auth_status(current_user: dict = Depends(get_current_active_user)):
+async def auth_status(current_user: User = Depends(get_current_active_user)):
     return {
         "authenticated": True,
         "username": current_user.username,
