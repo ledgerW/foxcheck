@@ -10,12 +10,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const usernameDisplay = document.getElementById('username-display');
     const usernameDisplayMobile = document.getElementById('username-display-mobile');
 
-    // Add admin access check function
     async function checkAdminAccess() {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
         try {
             const response = await fetch('/api/auth/status', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    'Authorization': `Bearer ${token}`
                 }
             });
 
@@ -23,12 +28,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 if (!data.authenticated || !data.is_admin) {
                     window.location.href = '/';
+                    return;
                 }
             } else {
+                localStorage.removeItem('access_token');
                 window.location.href = '/login';
             }
         } catch (error) {
             console.error('Error checking admin access:', error);
+            localStorage.removeItem('access_token');
             window.location.href = '/login';
         }
     }
@@ -46,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Check if we're on an admin page and verify admin access
+    // Check if we're on an admin page and verify admin access immediately
     if (window.location.pathname.startsWith('/admin')) {
         checkAdminAccess();
     }
@@ -197,29 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (usernameDisplay) usernameDisplay.textContent = '';
         if (usernameDisplayMobile) usernameDisplayMobile.textContent = '';
     }
-
-    // Handle mobile menu closing when clicking outside
-    document.addEventListener('click', (event) => {
-        const navbarCollapse = document.querySelector('.navbar-collapse');
-        const navbarToggler = document.querySelector('.navbar-toggler');
-        
-        if (navbarCollapse && navbarCollapse.classList.contains('show') &&
-            !navbarCollapse.contains(event.target) &&
-            !navbarToggler.contains(event.target)) {
-            navbarCollapse.classList.remove('show');
-        }
-
-        // Handle dropdown menu closing
-        const dropdowns = document.querySelectorAll('.dropdown-menu.show');
-        const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-        
-        dropdowns.forEach(dropdown => {
-            if (!dropdown.contains(event.target) && 
-                !Array.from(dropdownToggles).some(toggle => toggle.contains(event.target))) {
-                dropdown.classList.remove('show');
-            }
-        });
-    });
 
     // Initial auth status check
     checkAuthStatus();

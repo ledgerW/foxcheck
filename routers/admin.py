@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_session
 from models import User, Article, Statement
 from auth import get_current_active_user
-from sqlalchemy import select
+from sqlalchemy import select, func
 from typing import List
 from sqlalchemy.orm import selectinload
 
@@ -22,51 +22,55 @@ async def get_admin_user(current_user: User = Depends(get_current_active_user)):
 
 # Admin dashboard pages
 @router.get("/admin", response_class=HTMLResponse)
-async def admin_dashboard(request: Request, admin_user: User = Depends(get_admin_user)):
+async def admin_dashboard(request: Request):
     try:
+        admin_user = await get_admin_user(Depends(get_current_active_user))
         return templates.TemplateResponse("admin/dashboard.html", {
             "request": request,
             "user": admin_user
         })
     except HTTPException as e:
-        if e.status_code == 401:
-            return RedirectResponse(url="/login")
+        if e.status_code in (401, 403):
+            return RedirectResponse(url="/login", status_code=302)
         raise
 
 @router.get("/admin/users", response_class=HTMLResponse)
-async def admin_users(request: Request, admin_user: User = Depends(get_admin_user)):
+async def admin_users(request: Request):
     try:
+        admin_user = await get_admin_user(Depends(get_current_active_user))
         return templates.TemplateResponse("admin/users.html", {
             "request": request,
             "user": admin_user
         })
     except HTTPException as e:
-        if e.status_code == 401:
-            return RedirectResponse(url="/login")
+        if e.status_code in (401, 403):
+            return RedirectResponse(url="/login", status_code=302)
         raise
 
 @router.get("/admin/articles", response_class=HTMLResponse)
-async def admin_articles(request: Request, admin_user: User = Depends(get_admin_user)):
+async def admin_articles(request: Request):
     try:
+        admin_user = await get_admin_user(Depends(get_current_active_user))
         return templates.TemplateResponse("admin/articles.html", {
             "request": request,
             "user": admin_user
         })
     except HTTPException as e:
-        if e.status_code == 401:
-            return RedirectResponse(url="/login")
+        if e.status_code in (401, 403):
+            return RedirectResponse(url="/login", status_code=302)
         raise
 
 @router.get("/admin/statements", response_class=HTMLResponse)
-async def admin_statements(request: Request, admin_user: User = Depends(get_admin_user)):
+async def admin_statements(request: Request):
     try:
+        admin_user = await get_admin_user(Depends(get_current_active_user))
         return templates.TemplateResponse("admin/statements.html", {
             "request": request,
             "user": admin_user
         })
     except HTTPException as e:
-        if e.status_code == 401:
-            return RedirectResponse(url="/login")
+        if e.status_code in (401, 403):
+            return RedirectResponse(url="/login", status_code=302)
         raise
 
 # Admin API endpoints
@@ -75,9 +79,9 @@ async def get_admin_stats(
     db: AsyncSession = Depends(get_session),
     admin_user: User = Depends(get_admin_user)
 ):
-    users_count = await db.execute(select(User).count())
-    articles_count = await db.execute(select(Article).count())
-    statements_count = await db.execute(select(Statement).count())
+    users_count = await db.execute(select(func.count(User.id)))
+    articles_count = await db.execute(select(func.count(Article.id)))
+    statements_count = await db.execute(select(func.count(Statement.id)))
     
     return {
         "users_count": users_count.scalar(),
