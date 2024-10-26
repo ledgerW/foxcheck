@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loggedOutMenu = document.getElementById('logged-out-menu');
     const loggedInMenu = document.getElementById('logged-in-menu');
     const usernameDisplay = document.getElementById('username-display');
+    const adminDashboardLink = document.getElementById('admin-dashboard-link');
 
     // Check if we're on login/register page and redirect if already logged in
     if (window.location.pathname === '/login' || window.location.pathname === '/register') {
@@ -30,6 +31,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!adminCheck) {
             return;
         }
+    }
+
+    // Add admin dashboard link handler
+    if (adminDashboardLink) {
+        adminDashboardLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('access_token');
+            
+            try {
+                const response = await fetch('/api/auth/status', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.authenticated && data.is_admin) {
+                        window.location.href = '/admin';
+                    } else {
+                        alert('Unauthorized: Admin access required');
+                        window.location.href = '/';
+                    }
+                } else {
+                    localStorage.removeItem('access_token');
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('Error checking admin access:', error);
+                window.location.href = '/';
+            }
+        });
     }
 
     async function checkAuthStatus() {
@@ -82,6 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (response.ok) {
                 const data = await response.json();
                 if (!data.authenticated || !data.is_admin) {
+                    alert('Unauthorized: Admin access required');
                     window.location.href = '/';
                     return false;
                 }
