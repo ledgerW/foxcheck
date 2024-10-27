@@ -3,11 +3,25 @@ from typing import Optional, List
 from pydantic import AnyHttpUrl, validator
 from datetime import datetime
 import json
+import os
 
 from schemas import Reference
 
 
+# Determine environment and set prefix
+is_production = os.getenv("REPLIT_DEPLOYMENT") == "1"
+print(f"Is production: {is_production}")
+table_prefix = "prod_" if is_production else "dev_"
+print(f"Table prefix: {table_prefix}")
+
+def get_table_name(model_name: str) -> str:
+    is_production = os.getenv("REPLIT_DEPLOYMENT") == "1"
+    table_prefix = "prod_" if is_production else "dev_"
+    return f"{table_prefix}{model_name}"
+
+
 class User(SQLModel, table=True):
+    __tablename__ = f"{table_prefix}user"
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(index=True)
     email: str = Field(unique=True, index=True)
@@ -19,14 +33,15 @@ class User(SQLModel, table=True):
 
 
 class Statement(SQLModel, table=True):
+    __tablename__ = f"{table_prefix}statement"
     id: Optional[int] = Field(default=None, primary_key=True)
     content: str = Field(index=True)
     verdict: Optional[str] = Field(default=None)
     explanation: Optional[str] = Field(default=None)
     references: Optional[str] = Field(default="[]")  # Store as JSON string in the database
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    article_id: Optional[int] = Field(default=None, foreign_key="article.id")
-    user_id: Optional[int] = Field(default=None, foreign_key="user.id")
+    article_id: Optional[int] = Field(default=None, foreign_key=f"{get_table_name('article')}.id")
+    user_id: Optional[int] = Field(default=None, foreign_key=f"{get_table_name('user')}.id")
 
     article: Optional["Article"] = Relationship(back_populates="statements")
 
@@ -52,11 +67,12 @@ class Statement(SQLModel, table=True):
 
 
 class Article(SQLModel, table=True):
+    __tablename__ = f"{table_prefix}article"
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str = Field(max_length=200)
     text: str
     date: datetime = Field(default_factory=datetime.utcnow)
-    user_id: int = Field(foreign_key="user.id")
+    user_id: int = Field(foreign_key=f"{get_table_name('user')}.id")
     is_active: bool = Field(default=True)
     domain: Optional[str] = Field(max_length=500, unique=True, index=True)
     links: Optional[str] = Field(default="[]")  # Store as JSON string
