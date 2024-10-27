@@ -140,7 +140,7 @@ async def get_admin_articles(
         )
     
     result = await db.execute(select(Article).options(selectinload(Article.user)))
-    articles = result.scalars().all()
+    articles = result.scalars().unique()
     return articles
 
 @router.put("/api/admin/articles/{article_id}")

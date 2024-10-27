@@ -6,6 +6,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loggedInMenu = document.getElementById('logged-in-menu');
     const usernameDisplay = document.getElementById('username-display');
     const adminDashboardLink = document.getElementById('admin-dashboard-link');
+    const adminUsersLink = document.getElementById('admin-users-link');
+
+    const buttonIds = ['admin-dashboard-link', 'admin-users-link', 'admin-articles-link', 'admin-statements-link'];
+
+    buttonIds.forEach(id => {
+        const button = document.getElementById(id);
+        if (button) { // Check if the element exists
+            button.addEventListener('click', async (e) => {
+                e.preventDefault();  // Prevent default action
+                await checkAdminAccess(button);  // Pass the clicked button element
+            });
+        }
+    });
+
+    // Check admin access immediately if on the admin page (refresh scenario)
+    if (window.location.pathname.startsWith('/admin')) {
+        const adminCheck = await checkAdminAccess();
+        if (!adminCheck) {
+            return;
+        }
+    }
 
     // Check if we're on login/register page and redirect if already logged in
     if (window.location.pathname === '/login' || window.location.pathname === '/register') {
@@ -24,39 +45,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Check admin access immediately if on admin page
-    if (window.location.pathname.startsWith('/admin')) {
-        const adminCheck = await checkAdminAccess();
-        if (!adminCheck) {
-            return;
-        }
-    }
+    async function checkAdminAccess(clickedButton) {
+        console.log("Button clicked:", clickedButton.id);
+        const pathMap = {
+            'admin-dashboard-link': '/admin',
+            'admin-users-link': '/admin/users',
+            'admin-articles-link': '/admin/articles',
+            'admin-statements-link': '/admin/statements'
+        };
 
-    async function checkAdminAccess() {
+        // Get the path associated with the clicked button's ID
+        const path = pathMap[clickedButton.id];
+        
         const token = localStorage.getItem('access_token');
         if (!token) {
-            window.location.href = '/login';
+            window.location.href = '/login';  // Redirect to login if no token
             return false;
         }
 
         try {
-            const response = await fetch('/admin', {
+            const response = await fetch(path, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
             if (response.ok) {
-                // Admin page loaded successfully
+                // Load the admin page content
                 document.open();
                 document.write(await response.text());
                 document.close();
                 return true;
             } else {
+                // Handle unauthorized or forbidden responses
                 if (response.status === 401) {
-                    window.location.href = '/login';
+                    window.location.href = '/login'; // Redirect to login if unauthorized
                 } else {
-                    window.location.href = '/';
+                    window.location.href = '/'; // Redirect to home for other errors
                 }
                 return false;
             }
@@ -66,6 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return false;
         }
     }
+
 
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
@@ -79,37 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         logoutButton.addEventListener('click', handleLogout);
     }
 
-    // Update the admin dashboard link handler
-    if (adminDashboardLink) {
-        adminDashboardLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const token = localStorage.getItem('access_token');
-            
-            try {
-                const response = await fetch('/api/auth/status', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.authenticated && data.is_admin) {
-                        window.location.href = '/admin';
-                    } else {
-                        alert('Unauthorized: Admin access required');
-                        window.location.href = '/';
-                    }
-                } else {
-                    localStorage.removeItem('access_token');
-                    window.location.href = '/login';
-                }
-            } catch (error) {
-                console.error('Error checking admin access:', error);
-                window.location.href = '/';
-            }
-        });
-    }
+    
 
     async function checkAuthStatus() {
         try {

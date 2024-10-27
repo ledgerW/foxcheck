@@ -43,23 +43,23 @@
             <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
                 <div class="position-sticky pt-3">
                     <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link{% if request.url.path == '/admin' %} active{% endif %}" href="/admin">
+                        <li class="admin-menu-item">
+                            <a href="#" class="nav-link{% if request.url.path == '/admin' %} active{% endif %}" id="admin-dashboard-link">
                                 <i class="bi bi-speedometer2"></i> Dashboard
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link{% if request.url.path == '/admin/users' %} active{% endif %}" href="/admin/users">
+                        <li class="admin-menu-item">
+                            <a href="#" class="nav-link{% if request.url.path == '/admin/users' %} active{% endif %}" id="admin-users-link">
                                 <i class="bi bi-people"></i> Users
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link{% if request.url.path == '/admin/articles' %} active{% endif %}" href="/admin/articles">
+                        <li class="admin-menu-item">
+                            <a href="#" class="nav-link{% if request.url.path == '/admin/articles' %} active{% endif %}" id="admin-articles-link">
                                 <i class="bi bi-file-text"></i> Articles
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link{% if request.url.path == '/admin/statements' %} active{% endif %}" href="/admin/statements">
+                        <li class="admin-menu-item">
+                            <a href="#" class="nav-link{% if request.url.path == '/admin/statements' %} active{% endif %}" id="admin-statements-link">
                                 <i class="bi bi-check-square"></i> Statements
                             </a>
                         </li>
