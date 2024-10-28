@@ -1,0 +1,22 @@
+data_dir: 'data'
+
+chunk_method: {
+    'method': 'token-overlap',
+    'args': {
+        'chunk_size': 100,
+        'chunk_overlap': 25
+    }
+}
+
+vectorstore_model: {
+    'model_source': 'huggingface',
+    'model_name': 'lw2134/policy_gte_large_2plus',
+    'api_url': 'https://gbjss828u09jxjs6.us-east-1.aws.endpoints.huggingface.cloud',
+    'vector_size': 1024
+}
+
+# Metrics: faithfulness, answer_relevancy, context_precision, context_recall
+metrics: ['context_precision', 'context_recall', 'faithfulness', 'answer_relevancy']
+ls_project: 'policy-rag'
+ls_dataset_name: "policy-golden-1000-over-100"
+ls_experiment_name: 'policy-embed-ft-gte-lg-2-100pl'

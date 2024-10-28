@@ -22,6 +22,7 @@ dependencies = [
     "langchain>=0.3.4",
     "langsmith>=0.1.136",
     "openai>=1.52.0",
+    "pandas>=2.2.3",
     "passlib>=1.7.4",
     "psycopg2-binary>=2.9.10",
     "pydantic-settings>=2.6.0",

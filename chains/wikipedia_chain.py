@@ -29,7 +29,7 @@ class WikipediaCheckOutput(TypedDict):
 
 llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
 
-retriever = WikipediaRetriever()
+retriever = WikipediaRetriever(name='wikipedia')
 
 prompt = ChatPromptTemplate.from_template(
     """

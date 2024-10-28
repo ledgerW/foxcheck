@@ -1,0 +1,5 @@
+# Metrics: faithfulness, answer_relevancy, context_precision, context_recall
+metrics: ['statement_evaluation']
+ls_project: 'Fact Checker'
+ls_dataset_name: "fact-checking-v1"
+ls_experiment_name: 'base-checker'

@@ -1,0 +1,29 @@
+data_dir: 'data'
+chunk_method: {
+    'method': 'token-overlap',
+    'args': {
+        'chunk_size': 800,
+        'chunk_overlap': 100
+    }
+}
+
+vectorstore_model: {
+    'model_source': 'openai',
+    'model_name': 'text-embedding-3-large',
+    'vector_size': 3072
+}
+
+#chunk_method: {
+#    'method': 'semantic',
+#    'args': {
+#        'model_source': 'openai',
+#        'model_name': 'text-embedding-3-large',
+#        'breakpoint_type': 'gradient'
+#    }
+#}
+
+# Metrics: faithfulness, answer_relevancy, context_precision, context_recall
+metrics: ['faithfulness', 'answer_relevancy', 'context_precision', 'context_recall']
+ls_project: 'policy-rag'
+ls_dataset_name: "policy-golden-1000-over-100"
+ls_experiment_name: 'policy-chunk-800-over-100'

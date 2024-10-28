@@ -39,26 +39,26 @@ class Verdict(BaseModel):
     references: List[VerdictRefs] = Field(description="The References used to actually justify the verdict.")
 
 
-llm = ChatOpenAI(model="gpt-4o", streaming=True)
+llm = ChatOpenAI(model="gpt-4o", streaming=True, name='judge_llm')
 
 prompt = ChatPromptTemplate.from_template(
     """
-    Statement:
-    {statement}
+Statement:
+{statement}
 
     
-    References:
-    {wiki}
+References:
+{wiki}
 
-    {web}
+{web}
 
-    {arxiv}
+{arxiv}
 
 
-    You are a journalist on the prestigious fact-checking team at a major news publication. Journalistic integrity is paramount. 
-    Your job is to judge if the statement above is accurate and reasonable given the References provided above. The references have
-    been gathered by other members of your team.
-    """
+You are a journalist on the prestigious fact-checking team at a major news publication. Journalistic integrity is paramount. 
+Your job is to judge if the statement above is accurate and reasonable given the References provided above. The references have
+been gathered by other members of your team.
+"""
 )
 
 tools = [Verdict]
@@ -66,7 +66,7 @@ tools = [Verdict]
 chain = (
     prompt
     | llm.bind_tools(tools)
-    | PydanticToolsParser(tools=tools, first_tool_only=True)
+    | PydanticToolsParser(tools=tools, first_tool_only=True, name='verdict')
 )
 
 

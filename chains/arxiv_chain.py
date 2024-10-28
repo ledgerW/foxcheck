@@ -29,7 +29,7 @@ class WikipediaCheckOutput(TypedDict):
 
 llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
 
-retriever = ArxivRetriever(load_max_docs=3, get_ful_documents=True)
+retriever = ArxivRetriever(name='arxiv', load_max_docs=3, get_ful_documents=True)
 
 prompt = ChatPromptTemplate.from_template(
     """

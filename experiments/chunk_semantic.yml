@@ -1,0 +1,22 @@
+data_dir: 'data'
+
+chunk_method: {
+    'method': 'semantic',
+    'args': {
+        'model_source': 'openai',
+        'model_name': 'text-embedding-3-small',
+        'breakpoint_type': 'percentile'
+    }
+}
+
+vectorstore_model: {
+    'model_source': 'openai',
+    'model_name': 'text-embedding-3-large',
+    'vector_size': 3072
+}
+
+# Metrics: faithfulness, answer_relevancy, context_precision, context_recall
+metrics: ['faithfulness', 'answer_relevancy', 'context_precision', 'context_recall']
+ls_project: 'policy-rag'
+ls_dataset_name: "policy-golden-1000-over-100"
+ls_experiment_name: 'policy-chunk-semantic'

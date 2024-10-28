@@ -24,15 +24,14 @@ Article:
 You are a journalist on the prestigious fact-checking team at a major news publication. Journalistic integrity is paramount. 
 From the Article above, extract all of the verifiable statements. Your team will research each of these statements to evaluate how accurate and reasonable they are.
     
-Make sure each statement contains all the necessary information, names, descriptions, etc..., so it can be understood and verified in isolation without referring back to the Article. Also make sure that you only extract
-statements that are significant to the story and interesting to the reader.
+Make sure each statement contains all the necessary information, names, descriptions, etc..., so it can be understood and verified in isolation without referring back to the Article. Also make sure that you only extract statements that are significant to the story and interesting to the reader. We don't need to evaluate "common sense" statements, or statements that are common knowledge. We want to focus on the statements that are required by the author to make their overall point and draw conclusions.
 
 Return an un-numbered and un-hyphenated list of all the statements.
 Each statement should be on a new line.
-    """
+"""
 )
 
-chain = prompt | llm | StrOutputParser()
+chain = prompt | llm | StrOutputParser(name='statements')
 
 
 async def get_statements(content: str) -> List[str]:
