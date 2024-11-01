@@ -41,7 +41,7 @@ class Verdict(BaseModel):
     references: List[VerdictRefs] = Field(description="The References used to actually justify the verdict.")
 
 
-llm = ChatOpenAI(model="gpt-4o", streaming=True, name='judge_llm')
+llm = ChatOpenAI(model="gpt-4o", temperature=0.1, streaming=True, name='judge_llm')
 
 prompt = ChatPromptTemplate.from_template(
     """
@@ -65,7 +65,7 @@ chain = (
     prompt
     | llm.bind_tools(tools)
     | PydanticToolsParser(tools=tools, first_tool_only=True, name='verdict')
-)
+).with_config({"run_name": "Get Verdict"})
 
 dspy_chain = (
     LangChainPredict(prompt, llm.bind_tools(tools))

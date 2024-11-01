@@ -12,7 +12,7 @@ load_dotenv()
 from langchain_openai import ChatOpenAI
 
 
-llm = ChatOpenAI(model="gpt-4o", streaming=True)
+llm = ChatOpenAI(model="gpt-4o", temperature=0.1, streaming=True, name='get_statements_llm')
 
 
 prompt = ChatPromptTemplate.from_template(
@@ -31,7 +31,7 @@ Each statement should be on a new line.
 """
 )
 
-chain = prompt | llm | StrOutputParser(name='statements')
+chain = (prompt | llm | StrOutputParser(name='statements')).with_config({"run_name": "Get Statements"})
 
 
 async def get_statements(content: str) -> List[str]:

@@ -35,7 +35,7 @@ base_fact_check = (
       'research': lambda x: "\n\n".join([str(x['wiki']), str(x['web']), str(x['arxiv'])])
     }
     | judge_chain
-)
+).with_config({"run_name": "Base Statement Checker"})
 
 
 multi_hop_fact_check = (
@@ -61,4 +61,4 @@ multi_hop_fact_check = (
         'research': lambda x: "\n\n".join([str(x['research']), str(x['wiki']), str(x['web']), str(x['arxiv'])])
       }
     | judge_chain
-)
+).with_config({"run_name": "Multi-hop Statement Checker"})

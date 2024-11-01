@@ -15,7 +15,7 @@ from langchain_openai import ChatOpenAI
 lm = dspy.LM('openai/gpt-4o', max_tokens=5000)
 dspy.configure(lm=lm)
 
-llm = ChatOpenAI(model="gpt-4o", streaming=True)
+llm = ChatOpenAI(model="gpt-4o", temperature=0.1, streaming=True, name='query_llm')
 
 
 class QueryOutput(BaseModel):
@@ -56,7 +56,7 @@ chain = (
     | llm.bind_tools(tools) 
     | PydanticToolsParser(tools=tools, first_tool_only=True)
     | get_query
-)
+).with_config({"run_name": "Get Query"})
 
 dspy_chain = (
     LangChainPredict(prompt, llm.bind_tools(tools))

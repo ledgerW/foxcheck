@@ -1,0 +1,29 @@
+{
+    "manifest_version": 3,
+    "name": "NYT Article Checker",
+    "version": "1.0",
+    "description": "Extract and fact-check statements from NYT articles.",
+    "permissions": [
+      "storage",
+      "tabs",
+      "activeTab",
+      "scripting"
+    ],
+    "host_permissions": [
+        "https://async-fast-api-chain-ledgerw.replit.app/*",
+        "https://d90c7780-fd55-44f9-870e-7f4d33bee331-00-1oo5r4dkhtpv4.spock.replit.dev/*"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "action": {
+      "default_popup": "popup.html"
+    },
+    "content_scripts": [
+      {
+        "matches": ["https://www.nytimes.com/*"],
+        "js": ["content.js"]
+      }
+    ]
+  }
+  
