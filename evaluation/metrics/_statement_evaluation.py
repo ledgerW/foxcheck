@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 from sqlmodel import all_
 
-from chains.adjudicator_chain import Verdict
 load_dotenv()
 
 import sys
