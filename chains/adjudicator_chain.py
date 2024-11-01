@@ -1,6 +1,8 @@
 from langchain_core.output_parsers import StrOutputParser, PydanticToolsParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents.base import Document
+import dspy
+from dspy.predict.langchain import LangChainPredict
 from typing import Optional, List, Dict, Annotated
 from typing_extensions import TypedDict
 from enum import Enum
@@ -48,11 +50,7 @@ Statement:
 
     
 References:
-{wiki}
-
-{web}
-
-{arxiv}
+{research}
 
 
 You are a journalist on the prestigious fact-checking team at a major news publication. Journalistic integrity is paramount. 
@@ -67,6 +65,11 @@ chain = (
     prompt
     | llm.bind_tools(tools)
     | PydanticToolsParser(tools=tools, first_tool_only=True, name='verdict')
+)
+
+dspy_chain = (
+    LangChainPredict(prompt, llm.bind_tools(tools))
+    | PydanticToolsParser(tools=tools, first_tool_only=True)
 )
 
 

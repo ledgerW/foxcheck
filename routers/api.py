@@ -13,6 +13,7 @@ from chains.wikipedia_chain import retriever as wiki_retriever
 from chains.tavily_chain import retriever as web_retriever
 from chains.arxiv_chain import retriever as arxiv_retriever
 from chains.adjudicator_chain import chain as judge_chain, Verdict
+from chains.fact_check_chain import multi_hop_fact_check as fact_check_chain
 
 from langchain_core.runnables import RunnablePassthrough
 from operator import itemgetter
@@ -32,18 +33,7 @@ async def check_statement(
 ):
     #try:
     _statement = statement.statement
-    fact_check_chain = (
-        {"statement": RunnablePassthrough(), "wiki": wiki_retriever, 'web': web_retriever, 'arxiv': arxiv_retriever}
-        | RunnablePassthrough.assign(
-            statement=itemgetter('statement'),
-            wiki=itemgetter('wiki'),
-            web=itemgetter('web'),
-            arxiv=itemgetter('arxiv')
-        )
-        | judge_chain
-    )
-
-    verdict = await fact_check_chain.ainvoke(_statement)
+    verdict = await fact_check_chain.ainvoke({'statement': _statement})
     return verdict
         #print(json.loads(verdict.model_dump_json()))
         #return json.loads(verdict.model_dump_json())

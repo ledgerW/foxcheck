@@ -45,7 +45,7 @@ prompt = ChatPromptTemplate.from_template(
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
-retriever = TavilySearchAPIRetriever(name='web', k=3)
+retriever = TavilySearchAPIRetriever(name='web', k=5)
 
 chain = (
     {"context": retriever, "statement": RunnablePassthrough()}

@@ -58,10 +58,11 @@ def eval_on_ls_dataset(
 
     client = Client(auto_batch_tracing=False)
     results = evaluate(
-        lambda inputs: chain.invoke(inputs["input"]),
+        lambda inputs: chain.invoke({'statement': inputs["input"]}),
         data=ls_dataset_name,
         evaluators=[METRICS[metric] for metric in metrics],
         experiment_prefix=ls_experiment_name,
+        num_repetitions=3,
         client=client
     )
 

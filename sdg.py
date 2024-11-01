@@ -14,7 +14,6 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from policy_rag.text_utils import DocLoader
 from policy_rag.text_utils import get_recursive_token_chunks, get_semantic_chunks
 from policy_rag.sdg_utils import ragas_sdg, upload_dataset_langsmith
-from policy_rag.chains import get_qa_chain
 
 
 # Config Options

@@ -6,15 +6,14 @@ import yaml
 import argparse
 
 
-from chains.wikipedia_chain import retriever as wiki_retriever
-from chains.tavily_chain import retriever as web_retriever
-from chains.arxiv_chain import retriever as arxiv_retriever
-from chains.adjudicator_chain import chain as judge_chain
-
-from langchain_core.runnables import RunnablePassthrough
-from operator import itemgetter
-
+from chains.fact_check_chain import base_fact_check, multi_hop_fact_check
 from evaluation.eval_utils import eval_on_ls_dataset
+
+
+CHAINS = {
+    'base-check': base_fact_check,
+    'multi-hop-fact-check': multi_hop_fact_check
+}
 
 
 
@@ -31,26 +30,18 @@ if __name__ == "__main__":
     ls_dataset_name = config_yml['ls_dataset_name']
     ls_experiment_name = config_yml['ls_experiment_name']
     metrics = config_yml['metrics']
+    chain = config_yml['chain']
 
     os.environ['LANGCHAIN_PROJECT'] = ls_project
     os.environ['LANGCHAIN_TRACING_V2'] = 'false'
 
     # Get Chain
-    fact_check_chain = (
-        {"statement": RunnablePassthrough(), "wiki": wiki_retriever, 'web': web_retriever, 'arxiv': arxiv_retriever}
-        | RunnablePassthrough.assign(
-            statement=itemgetter('statement'),
-            wiki=itemgetter('wiki'),
-            web=itemgetter('web'),
-            arxiv=itemgetter('arxiv')
-        )
-        | judge_chain
-    )
+    
     
     # Run RAGAS Evaluation in LangSmith
     result = eval_on_ls_dataset(
         metrics=metrics,
-        chain=fact_check_chain,
+        chain=CHAINS[chain],
         ls_dataset_name=ls_dataset_name,
         ls_project_name=ls_project,
         ls_experiment_name=ls_experiment_name

@@ -18,10 +18,9 @@ from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import PydanticToolsParser
-from langchain_openai import OpenAIEmbeddings
 
 
-class VerdictStrength(BaseModel):
+class VerdictStrengthOLD(BaseModel):
     """Use this to evaluate the verdict strength of a statement."""
 
     reference_authority: int = Field(description="Are the reference sources trustworthy and reputable on a scale of 1 to 10 with 10 being very trustworth.", ge=1, le=10)
@@ -29,6 +28,14 @@ class VerdictStrength(BaseModel):
     explanation_completeness: int = Field(description="Is the explanation throrough and air tight on a scale of 1 to 10 with 10 being very thorough.", ge=1, le=10)
     alternate_explanations: int = Field(description="Would an honest expert propose a reasonable alternate explanation in response to this verdict on a scale of 1 to 10 with 10 being very unlikely to propose an alternate explanation.", ge=1, le=10)
     missing_information: int = Field(description="Would an honest expert point out missing information pertinent to statement evaluation on a scale of 1 - 10 with 10 being very unlikely to point out missing information.", ge=1, le=10)
+
+
+class VerdictStrength(BaseModel):
+    """Use this to evaluate the verdict strength of a statement."""
+
+    explanation_completeness: int = Field(description="Is the explanation throrough and air tight on a scale of 1 to 10 with 10 being very thorough.", ge=1, le=10)
+    alternate_explanations: int = Field(description="Would an honest expert propose a reasonable alternate explanation in response to this verdict on a scale of 1 to 10 with 10 being very unlikely to propose an alternate explanation.", ge=1, le=10)
+    missing_information: int = Field(description="Would an honest expert point out missing information needed to properly evaluate the statement on a scale of 1 - 10 with 10 being very unlikely to point out missing information.", ge=1, le=10)
 
 
 
@@ -75,9 +82,6 @@ any reasonable doubts about the verdict explanation.
 
 
 def statement_evaluation(run: Run, example: Example) -> dict:
-    print(f"run: {run}")
-    print(f"example: {example}")
-    
     statement: str = example.inputs['input']
     verdict: Verdict = run.outputs["output"]
 
@@ -89,18 +93,14 @@ def statement_evaluation(run: Run, example: Example) -> dict:
         references=json.dumps(verdict['references'])
     )
 
-    reference_authority = verdict_strength.reference_authority
-    reference_confidence = verdict_strength.reference_confidence
     explanation_completeness = verdict_strength.explanation_completeness
     alternate_explanations = verdict_strength.alternate_explanations
     missing_information = verdict_strength.missing_information
 
-    verdict_strength_score = (reference_authority + reference_confidence + explanation_completeness + alternate_explanations + missing_information) / 5
+    verdict_strength_score = (explanation_completeness + alternate_explanations + missing_information) / 3
     
     all_scores = {
         'results': [
-            {'key': 'reference_authority', 'score': reference_authority},
-            {'key': 'reference_confidence', 'score': reference_confidence},
             {'key': 'explanation_completeness', 'score': explanation_completeness},
             {'key': 'alternate_explanations', 'score': alternate_explanations},
             {'key': 'missing_information', 'score': missing_information},
