@@ -104,7 +104,7 @@ async function editStatement(statementId) {
         document.getElementById('edit-content').value = statement.content;
         document.getElementById('edit-verdict').value = statement.verdict || 'Unverified';
         document.getElementById('edit-explanation').value = statement.explanation || '';
-        document.getElementById('edit-references').value = JSON.stringify(statement.references || [], null, 2);
+        document.getElementById('edit-references').value = statement.references || '';
         
         // Hide loading, show content
         if (loadingSpinner) loadingSpinner.style.display = 'none';

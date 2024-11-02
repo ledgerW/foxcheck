@@ -275,7 +275,7 @@ async def update_statement_admin(
         if statement_data.explanation is not None:
             statement.explanation = statement_data.explanation
         if statement_data.references is not None:
-            statement.references = json.dumps(statement_data.references)
+            statement.references = json.dumps([ref.model_dump() for ref in statement_data.references])
         
         await db.commit()
         await db.refresh(statement)

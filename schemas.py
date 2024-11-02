@@ -33,7 +33,7 @@ class TokenData(BaseModel):
 # Reference schema (used within Statement)
 class Reference(TypedDict):
     title: str
-    source: AnyHttpUrl
+    source: str
     summary: str
 
 # Statement schemas
