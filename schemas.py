@@ -20,6 +20,8 @@ class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
     password: Optional[str] = None
+    is_active: Optional[bool] = None
+    is_admin: Optional[bool] = None
 
 class Token(BaseModel):
     access_token: str
@@ -51,6 +53,12 @@ class Reference(BaseModel):
     title: str
     source: str
     summary: Optional[str] = None
+
+class StatementUpdate(BaseModel):
+    content: Optional[str] = None
+    verdict: Optional[str] = None
+    explanation: Optional[str] = None
+    references: Optional[List[Reference]] = None
 
 class StatementRead(BaseModel):
     id: int

@@ -9,7 +9,7 @@ from sqlalchemy import select, func
 from typing import List
 from sqlalchemy.orm import selectinload
 import crud
-from schemas import ArticleRead, ArticleUpdate
+from schemas import ArticleRead, ArticleUpdate, UserUpdate, StatementUpdate
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -120,6 +120,32 @@ async def get_admin_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+@router.put("/api/admin/users/{user_id}")
+async def update_user_admin(
+    user_id: int,
+    user_data: UserUpdate,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_active_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update users"
+        )
+    
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    try:
+        updated_user = await crud.update_user(db=db, user=user, user_update=user_data)
+        return updated_user
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+
 @router.get("/api/admin/articles/{article_id}", response_model=ArticleRead)
 async def get_admin_article(
     article_id: int,
@@ -225,7 +251,7 @@ async def get_admin_statement(
 @router.put("/api/admin/statements/{statement_id}")
 async def update_statement_admin(
     statement_id: int,
-    statement_data: dict,
+    statement_data: StatementUpdate,
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
@@ -239,9 +265,14 @@ async def update_statement_admin(
     if not statement:
         raise HTTPException(status_code=404, detail="Statement not found")
     
-    for key, value in statement_data.items():
-        if hasattr(statement, key):
+    try:
+        for key, value in statement_data.dict(exclude_unset=True).items():
             setattr(statement, key, value)
-    
-    await db.commit()
-    return statement
+        await db.commit()
+        await db.refresh(statement)
+        return statement
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
