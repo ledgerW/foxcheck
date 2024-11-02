@@ -10,88 +10,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const buttonIds = ['admin-dashboard-link', 'admin-users-link', 'admin-articles-link', 'admin-statements-link'];
 
-    buttonIds.forEach(id => {
-        const button = document.getElementById(id);
-        if (button) { // Check if the element exists
-            button.addEventListener('click', async (e) => {
-                e.preventDefault();  // Prevent default action
-                await checkAdminAccess(button);  // Pass the clicked button element
-            });
-        }
-    });
-
-    // Check admin access immediately if on the admin page (refresh scenario)
+    // Check auth status immediately if on admin page
     if (window.location.pathname.startsWith('/admin')) {
-        const adminCheck = await checkAdminAccess();
-        if (!adminCheck) {
+        const authStatus = await checkAuthStatus();
+        if (!authStatus.authenticated || !authStatus.is_admin) {
+            window.location.href = '/login';
             return;
         }
     }
 
-    // Check if we're on login/register page and redirect if already logged in
-    if (window.location.pathname === '/login' || window.location.pathname === '/register') {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            const authStatus = await checkAuthStatus();
-            if (authStatus.authenticated) {
-                const previousPath = sessionStorage.getItem('previous_path');
-                if (previousPath && previousPath.startsWith('/admin') && authStatus.is_admin) {
-                    window.location.href = previousPath;
-                    sessionStorage.removeItem('previous_path');
-                } else {
-                    window.location.href = '/';
-                }
-            }
-        }
-    }
-
-    async function checkAdminAccess(clickedButton) {
-        console.log("Button clicked:", clickedButton.id);
-        const pathMap = {
-            'admin-dashboard-link': '/admin',
-            'admin-users-link': '/admin/users',
-            'admin-articles-link': '/admin/articles',
-            'admin-statements-link': '/admin/statements'
-        };
-
-        // Get the path associated with the clicked button's ID
-        const path = pathMap[clickedButton.id];
-        
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-            window.location.href = '/login';  // Redirect to login if no token
-            return false;
-        }
-
-        try {
-            const response = await fetch(path, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+    buttonIds.forEach(id => {
+        const button = document.getElementById(id);
+        if (button) {
+            button.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await checkAdminAccess(button);
             });
-
-            if (response.ok) {
-                // Load the admin page content
-                document.open();
-                document.write(await response.text());
-                document.close();
-                return true;
-            } else {
-                // Handle unauthorized or forbidden responses
-                if (response.status === 401) {
-                    window.location.href = '/login'; // Redirect to login if unauthorized
-                } else {
-                    window.location.href = '/'; // Redirect to home for other errors
-                }
-                return false;
-            }
-        } catch (error) {
-            console.error('Error accessing admin page:', error);
-            window.location.href = '/';
-            return false;
         }
-    }
-
+    });
 
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
@@ -105,7 +41,61 @@ document.addEventListener('DOMContentLoaded', async () => {
         logoutButton.addEventListener('click', handleLogout);
     }
 
-    
+    async function checkAdminAccess(clickedButton) {
+        const pathMap = {
+            'admin-dashboard-link': '/admin',
+            'admin-users-link': '/admin/users',
+            'admin-articles-link': '/admin/articles',
+            'admin-statements-link': '/admin/statements'
+        };
+
+        const path = pathMap[clickedButton.id];
+        
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            sessionStorage.setItem('previous_path', path);
+            window.location.href = '/login';
+            return false;
+        }
+
+        try {
+            const response = await fetch(path, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                document.open();
+                document.write(await response.text());
+                document.close();
+                
+                // Re-initialize scripts after loading new content
+                const scripts = document.querySelectorAll('script');
+                scripts.forEach(script => {
+                    if (script.src) {
+                        const newScript = document.createElement('script');
+                        newScript.src = script.src;
+                        document.body.appendChild(newScript);
+                    }
+                });
+                
+                return true;
+            } else {
+                if (response.status === 401) {
+                    sessionStorage.setItem('previous_path', path);
+                    window.location.href = '/login';
+                } else {
+                    window.location.href = '/';
+                }
+                return false;
+            }
+        } catch (error) {
+            console.error('Error accessing admin page:', error);
+            window.location.href = '/';
+            return false;
+        }
+    }
 
     async function checkAuthStatus() {
         try {
@@ -136,34 +126,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             localStorage.removeItem('access_token');
             updateUIForLoggedOutState();
             return { authenticated: false };
-        }
-    }
-
-    async function handleRegister(e) {
-        e.preventDefault();
-        const username = document.getElementById('username').value;
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-
-        try {
-            const response = await fetch('/users/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, email, password }),
-            });
-
-            if (response.ok) {
-                alert('Registration successful! Please log in.');
-                window.location.href = '/login';
-            } else {
-                const errorData = await response.json();
-                alert(`Registration failed: ${errorData.detail}`);
-            }
-        } catch (error) {
-            console.error('Registration error:', error);
-            alert('An error occurred during registration. Please try again.');
         }
     }
 
@@ -207,6 +169,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    async function handleRegister(e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const response = await fetch('/users/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, email, password }),
+            });
+
+            if (response.ok) {
+                alert('Registration successful! Please log in.');
+                window.location.href = '/login';
+            } else {
+                const errorData = await response.json();
+                alert(`Registration failed: ${errorData.detail}`);
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            alert('An error occurred during registration. Please try again.');
+        }
+    }
+
     async function handleLogout() {
         localStorage.removeItem('access_token');
         await checkAuthStatus();
@@ -218,7 +208,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (loggedInMenu) loggedInMenu.style.display = 'block';
         if (usernameDisplay) usernameDisplay.textContent = username;
 
-        // Update admin menu items visibility
         const adminMenuItems = document.querySelectorAll('.admin-menu-item');
         adminMenuItems.forEach(item => {
             item.style.display = isAdmin ? 'block' : 'none';
@@ -230,7 +219,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (loggedInMenu) loggedInMenu.style.display = 'none';
         if (usernameDisplay) usernameDisplay.textContent = '';
 
-        // If on admin page, store the path and redirect
         if (window.location.pathname.startsWith('/admin')) {
             sessionStorage.setItem('previous_path', window.location.pathname);
             window.location.href = '/login';

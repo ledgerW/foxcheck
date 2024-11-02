@@ -9,6 +9,7 @@ from sqlalchemy import select, func
 from typing import List
 from sqlalchemy.orm import selectinload
 import crud
+from schemas import ArticleRead
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -102,7 +103,7 @@ async def get_admin_users(
     users = result.scalars().all()
     return users
 
-@router.get("/api/admin/articles/{article_id}")
+@router.get("/api/admin/articles/{article_id}", response_model=ArticleRead)
 async def get_admin_article(
     article_id: int,
     db: AsyncSession = Depends(get_session),
@@ -122,7 +123,7 @@ async def get_admin_article(
         )
     return article
 
-@router.get("/api/admin/articles")
+@router.get("/api/admin/articles", response_model=List[ArticleRead])
 async def get_admin_articles(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
@@ -134,10 +135,10 @@ async def get_admin_articles(
         )
     
     result = await db.execute(select(Article).options(selectinload(Article.user)))
-    articles = result.scalars().unique()
+    articles = result.scalars().unique().all()
     return articles
 
-@router.put("/api/admin/articles/{article_id}")
+@router.put("/api/admin/articles/{article_id}", response_model=ArticleRead)
 async def update_article_admin(
     article_id: int,
     article_data: dict,
