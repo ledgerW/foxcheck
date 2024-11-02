@@ -129,16 +129,25 @@ async function saveStatementChanges() {
         const referencesText = document.getElementById('edit-references').value;
         references = referencesText ? JSON.parse(referencesText) : [];
         
-        // Validate references against the Reference schema
-        references = references.map(ref => ({
-            title: ref.title,
-            source: ref.source,
-            summary: ref.summary || null
-        }));
+        // Validate each reference against the schema
+        if (!Array.isArray(references)) {
+            throw new Error('References must be an array');
+        }
+        
+        references = references.map(ref => {
+            if (!ref.title || !ref.source) {
+                throw new Error('Each reference must have a title and source');
+            }
+            return {
+                title: ref.title,
+                source: ref.source,
+                summary: ref.summary || ''  // Make summary an empty string if not provided
+            };
+        });
     } catch (error) {
         if (modalError) {
             modalError.style.display = 'block';
-            modalError.textContent = 'Invalid JSON format in references field';
+            modalError.textContent = 'Invalid JSON format in references field: ' + error.message;
         }
         return;
     }
