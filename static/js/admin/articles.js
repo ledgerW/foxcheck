@@ -19,16 +19,18 @@ async function loadArticles() {
             displayArticles(articles);
         } else {
             console.error('Failed to load articles');
+            showError('Failed to load articles. Please try again.');
         }
     } catch (error) {
         console.error('Error loading articles:', error);
+        showError('An error occurred while loading articles.');
     }
 }
 
 function displayArticles(articles) {
     const tbody = document.getElementById('articles-table-body');
     tbody.innerHTML = articles.map(article => `
-        <tr>
+        <tr data-id="${article.id}">
             <td>${article.id}</td>
             <td>${article.title}</td>
             <td>${article.domain || '-'}</td>
@@ -51,22 +53,69 @@ function displayArticles(articles) {
     `).join('');
 }
 
-function editArticle(articleId) {
+async function editArticle(articleId) {
     const modal = new bootstrap.Modal(document.getElementById('editArticleModal'));
-    const article = getArticleById(articleId);
-    if (article) {
-        document.getElementById('edit-article-id').value = article.id;
-        document.getElementById('edit-title').value = article.title;
-        document.getElementById('edit-domain').value = article.domain || '';
-        document.getElementById('edit-authors').value = article.authors || '';
-        document.getElementById('edit-text').value = article.text;
-        document.getElementById('edit-is-active').checked = article.is_active;
+    const loadingSpinner = document.getElementById('edit-article-loading');
+    const modalContent = document.getElementById('edit-article-form');
+    const modalError = document.getElementById('edit-article-error');
+
+    try {
+        // Show loading state
+        if (loadingSpinner) loadingSpinner.style.display = 'block';
+        if (modalContent) modalContent.style.display = 'none';
+        if (modalError) modalError.style.display = 'none';
+        
         modal.show();
+
+        const article = await getArticleById(articleId);
+        
+        if (article) {
+            document.getElementById('edit-article-id').value = article.id;
+            document.getElementById('edit-title').value = article.title;
+            document.getElementById('edit-domain').value = article.domain || '';
+            document.getElementById('edit-authors').value = article.authors || '';
+            document.getElementById('edit-text').value = article.text;
+            document.getElementById('edit-is-active').checked = article.is_active;
+            
+            // Hide loading, show content
+            if (loadingSpinner) loadingSpinner.style.display = 'none';
+            if (modalContent) modalContent.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading article:', error);
+        if (modalError) {
+            modalError.style.display = 'block';
+            modalError.textContent = 'Failed to load article data. Please try again.';
+        }
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+    }
+}
+
+async function getArticleById(articleId) {
+    try {
+        const response = await fetch(`/api/admin/articles/${articleId}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch article data');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching article:', error);
+        throw error;
     }
 }
 
 async function saveArticleChanges() {
     const articleId = document.getElementById('edit-article-id').value;
+    const saveButton = document.getElementById('save-article-changes');
+    const modalError = document.getElementById('edit-article-error');
+    
+    // Collect form data
     const articleData = {
         title: document.getElementById('edit-title').value,
         domain: document.getElementById('edit-domain').value,
@@ -76,6 +125,13 @@ async function saveArticleChanges() {
     };
 
     try {
+        // Disable save button and show loading state
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+        }
+        if (modalError) modalError.style.display = 'none';
+
         const response = await fetch(`/api/admin/articles/${articleId}`, {
             method: 'PUT',
             headers: {
@@ -88,25 +144,43 @@ async function saveArticleChanges() {
         if (response.ok) {
             const modal = bootstrap.Modal.getInstance(document.getElementById('editArticleModal'));
             modal.hide();
-            loadArticles();
+            loadArticles(); // Refresh the articles list
+            showSuccess('Article updated successfully');
         } else {
-            console.error('Failed to update article');
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to update article');
         }
     } catch (error) {
         console.error('Error updating article:', error);
+        if (modalError) {
+            modalError.style.display = 'block';
+            modalError.textContent = error.message || 'Failed to update article. Please try again.';
+        }
+    } finally {
+        // Reset save button state
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.innerHTML = 'Save changes';
+        }
     }
 }
 
-function getArticleById(articleId) {
-    const row = document.querySelector(`#articles-table-body tr td:first-child[data-id="${articleId}"]`)?.parentElement;
-    if (!row) return null;
+function showError(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.table-responsive'));
+}
 
-    return {
-        id: articleId,
-        title: row.children[1].textContent,
-        domain: row.children[2].textContent !== '-' ? row.children[2].textContent : '',
-        authors: row.children[3].textContent !== '-' ? row.children[3].textContent : '',
-        text: '', // This will be filled when editing
-        is_active: row.children[4].querySelector('.badge').classList.contains('bg-success')
-    };
+function showSuccess(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.table-responsive'));
 }

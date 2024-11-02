@@ -8,6 +8,7 @@ from auth import get_current_active_user
 from sqlalchemy import select, func
 from typing import List
 from sqlalchemy.orm import selectinload
+import crud
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -17,9 +18,6 @@ async def admin_dashboard(
     request: Request,
     current_user: User = Depends(get_current_active_user)
 ):
-    print(f"Admin access attempt - Headers: {dict(request.headers)}")
-    print(f"Current user: {current_user.username} (admin: {current_user.is_admin})")
-    
     if not current_user.is_admin:
         return RedirectResponse(url="/", status_code=302)
     
@@ -104,29 +102,25 @@ async def get_admin_users(
     users = result.scalars().all()
     return users
 
-@router.put("/api/admin/users/{user_id}")
-async def update_user_admin(
-    user_id: int,
-    user_data: dict,
+@router.get("/api/admin/articles/{article_id}")
+async def get_admin_article(
+    article_id: int,
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
     if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to update users"
+            detail="Not authorized to access article management"
         )
     
-    user = await db.get(User, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    for key, value in user_data.items():
-        if hasattr(user, key):
-            setattr(user, key, value)
-    
-    await db.commit()
-    return user
+    article = await crud.get_article(db, article_id)
+    if not article:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Article not found"
+        )
+    return article
 
 @router.get("/api/admin/articles")
 async def get_admin_articles(
@@ -156,16 +150,22 @@ async def update_article_admin(
             detail="Not authorized to update articles"
         )
     
-    article = await db.get(Article, article_id)
+    article = await crud.get_article(db, article_id)
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
     
-    for key, value in article_data.items():
-        if hasattr(article, key):
-            setattr(article, key, value)
-    
-    await db.commit()
-    return article
+    try:
+        updated_article = await crud.update_article(
+            db=db,
+            article=article,
+            article_update=article_data
+        )
+        return updated_article
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
 
 @router.get("/api/admin/statements")
 async def get_admin_statements(
