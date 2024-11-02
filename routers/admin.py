@@ -9,7 +9,7 @@ from sqlalchemy import select, func
 from typing import List
 from sqlalchemy.orm import selectinload
 import crud
-from schemas import ArticleRead
+from schemas import ArticleRead, ArticleUpdate
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -141,7 +141,7 @@ async def get_admin_articles(
 @router.put("/api/admin/articles/{article_id}", response_model=ArticleRead)
 async def update_article_admin(
     article_id: int,
-    article_data: dict,
+    article_data: ArticleUpdate,
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
