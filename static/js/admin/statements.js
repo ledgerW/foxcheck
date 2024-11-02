@@ -128,6 +128,13 @@ async function saveStatementChanges() {
     try {
         const referencesText = document.getElementById('edit-references').value;
         references = referencesText ? JSON.parse(referencesText) : [];
+        
+        // Validate references against the Reference schema
+        references = references.map(ref => ({
+            title: ref.title,
+            source: ref.source,
+            summary: ref.summary || null
+        }));
     } catch (error) {
         if (modalError) {
             modalError.style.display = 'block';
@@ -137,9 +144,9 @@ async function saveStatementChanges() {
     }
 
     const statementData = {
-        content: document.getElementById('edit-content').value,
-        verdict: document.getElementById('edit-verdict').value,
-        explanation: document.getElementById('edit-explanation').value,
+        content: document.getElementById('edit-content').value || null,
+        verdict: document.getElementById('edit-verdict').value || null,
+        explanation: document.getElementById('edit-explanation').value || null,
         references: references
     };
 
