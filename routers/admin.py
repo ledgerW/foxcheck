@@ -103,6 +103,23 @@ async def get_admin_users(
     users = result.scalars().all()
     return users
 
+@router.get("/api/admin/users/{user_id}")
+async def get_admin_user(
+    user_id: int,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_active_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access user management"
+        )
+    
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
 @router.get("/api/admin/articles/{article_id}", response_model=ArticleRead)
 async def get_admin_article(
     article_id: int,
@@ -182,6 +199,28 @@ async def get_admin_statements(
     result = await db.execute(select(Statement).options(selectinload(Statement.article)))
     statements = result.scalars().all()
     return statements
+
+@router.get("/api/admin/statements/{statement_id}")
+async def get_admin_statement(
+    statement_id: int,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_active_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access statement management"
+        )
+    
+    stmt = await db.execute(
+        select(Statement)
+        .options(selectinload(Statement.article))
+        .where(Statement.id == statement_id)
+    )
+    statement = stmt.scalar_one_or_none()
+    if not statement:
+        raise HTTPException(status_code=404, detail="Statement not found")
+    return statement
 
 @router.put("/api/admin/statements/{statement_id}")
 async def update_statement_admin(
