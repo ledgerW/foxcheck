@@ -59,8 +59,11 @@ function displayUsers(users) {
             </td>
             <td>${new Date(user.created_at).toLocaleString()}</td>
             <td>
-                <button class="btn btn-sm btn-primary" onclick="editUser(${user.id})">
+                <button class="btn btn-sm btn-primary me-1" onclick="editUser(${user.id})">
                     <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">
+                    <i class="bi bi-trash"></i>
                 </button>
             </td>
         </tr>
@@ -162,6 +165,32 @@ async function saveUserChanges() {
             saveButton.disabled = false;
             saveButton.innerHTML = 'Save changes';
         }
+    }
+}
+
+async function deleteUser(userId) {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/users/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+
+        if (response.ok) {
+            showSuccess('User deleted successfully');
+            loadUsers(); // Refresh the users list
+        } else {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to delete user');
+        }
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showError(error.message || 'Failed to delete user. Please try again.');
     }
 }
 

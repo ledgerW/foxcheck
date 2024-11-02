@@ -45,6 +45,9 @@ function displayArticles(articles) {
                 <button class="btn btn-sm btn-primary me-1" onclick="editArticle(${article.id})">
                     <i class="bi bi-pencil"></i>
                 </button>
+                <button class="btn btn-sm btn-danger me-1" onclick="deleteArticle(${article.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
                 <a href="/articles/${article.id}" class="btn btn-sm btn-info" target="_blank">
                     <i class="bi bi-eye"></i>
                 </a>
@@ -162,6 +165,32 @@ async function saveArticleChanges() {
             saveButton.disabled = false;
             saveButton.innerHTML = 'Save changes';
         }
+    }
+}
+
+async function deleteArticle(articleId) {
+    if (!confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/articles/${articleId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+
+        if (response.ok) {
+            showSuccess('Article deleted successfully');
+            loadArticles(); // Refresh the articles list
+        } else {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to delete article');
+        }
+    } catch (error) {
+        console.error('Error deleting article:', error);
+        showError(error.message || 'Failed to delete article. Please try again.');
     }
 }
 

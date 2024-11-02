@@ -67,7 +67,6 @@ async def admin_statements(
         "user": current_user
     })
 
-# Admin API endpoints
 @router.get("/api/admin/stats")
 async def get_admin_stats(
     db: AsyncSession = Depends(get_session),
@@ -252,7 +251,7 @@ async def get_admin_statement(
 @router.put("/api/admin/statements/{statement_id}")
 async def update_statement_admin(
     statement_id: int,
-    statement_data: StatementUpdate,  # This expects a StatementUpdate model
+    statement_data: StatementUpdate,
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
@@ -267,7 +266,6 @@ async def update_statement_admin(
         raise HTTPException(status_code=404, detail="Statement not found")
     
     try:
-        # Update statement fields
         if statement_data.content is not None:
             statement.content = statement_data.content
         if statement_data.verdict is not None:
@@ -285,3 +283,70 @@ async def update_statement_admin(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e)
         )
+
+@router.delete("/api/admin/users/{user_id}")
+async def delete_user_admin(
+    user_id: int,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_active_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete users"
+        )
+    
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.is_admin:
+        admin_count = await db.scalar(
+            select(func.count(User.id)).where(User.is_admin == True)
+        )
+        if admin_count <= 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete the last admin user"
+            )
+    
+    await crud.delete_user(db=db, user=user)
+    return {"message": "User deleted successfully"}
+
+@router.delete("/api/admin/articles/{article_id}")
+async def delete_article_admin(
+    article_id: int,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_active_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete articles"
+        )
+    
+    article = await crud.get_article(db, article_id)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    
+    await crud.delete_article(db=db, article=article)
+    return {"message": "Article deleted successfully"}
+
+@router.delete("/api/admin/statements/{statement_id}")
+async def delete_statement_admin(
+    statement_id: int,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_active_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete statements"
+        )
+    
+    statement = await crud.get_statement(db, statement_id)
+    if not statement:
+        raise HTTPException(status_code=404, detail="Statement not found")
+    
+    await crud.delete_statement(db=db, statement=statement)
+    return {"message": "Statement deleted successfully"}

@@ -59,6 +59,9 @@ function displayStatements(statements) {
                 <button class="btn btn-sm btn-primary me-1" onclick="editStatement(${statement.id})">
                     <i class="bi bi-pencil"></i>
                 </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteStatement(${statement.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
             </td>
         </tr>
     `).join('');
@@ -81,7 +84,6 @@ async function editStatement(statementId) {
     const modalError = document.getElementById('edit-statement-error');
 
     try {
-        // Show loading state
         if (loadingSpinner) loadingSpinner.style.display = 'block';
         if (modalContent) modalContent.style.display = 'none';
         if (modalError) modalError.style.display = 'none';
@@ -106,7 +108,6 @@ async function editStatement(statementId) {
         document.getElementById('edit-explanation').value = statement.explanation || '';
         document.getElementById('edit-references').value = statement.references || '';
         
-        // Hide loading, show content
         if (loadingSpinner) loadingSpinner.style.display = 'none';
         if (modalContent) modalContent.style.display = 'block';
     } catch (error) {
@@ -116,6 +117,32 @@ async function editStatement(statementId) {
             modalError.textContent = 'Failed to load statement data. Please try again.';
         }
         if (loadingSpinner) loadingSpinner.style.display = 'none';
+    }
+}
+
+async function deleteStatement(statementId) {
+    if (!confirm('Are you sure you want to delete this statement? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/statements/${statementId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+
+        if (response.ok) {
+            showSuccess('Statement deleted successfully');
+            loadStatements();
+        } else {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to delete statement');
+        }
+    } catch (error) {
+        console.error('Error deleting statement:', error);
+        showError(error.message || 'Failed to delete statement. Please try again.');
     }
 }
 
@@ -129,7 +156,6 @@ async function saveStatementChanges() {
         const referencesText = document.getElementById('edit-references').value;
         references = referencesText ? JSON.parse(referencesText) : [];
         
-        // Validate each reference against the schema
         if (!Array.isArray(references)) {
             throw new Error('References must be an array');
         }
@@ -141,7 +167,7 @@ async function saveStatementChanges() {
             return {
                 title: ref.title,
                 source: ref.source,
-                summary: ref.summary || ''  // Make summary an empty string if not provided
+                summary: ref.summary || ''
             };
         });
     } catch (error) {
@@ -160,7 +186,6 @@ async function saveStatementChanges() {
     };
 
     try {
-        // Show loading state
         if (saveButton) {
             saveButton.disabled = true;
             saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
@@ -192,7 +217,6 @@ async function saveStatementChanges() {
             modalError.textContent = error.message || 'Failed to update statement. Please try again.';
         }
     } finally {
-        // Reset save button state
         if (saveButton) {
             saveButton.disabled = false;
             saveButton.innerHTML = 'Save changes';
