@@ -84,7 +84,7 @@ async def update_admin_user(session: AsyncSession):
         await session.rollback()
         raise
 
-async def seed_admin_and_sample_articles(session: AsyncSession, sample_articles: bool=False):
+async def seed_admin_and_sample_articles(session: AsyncSession):
     """Seed the database with sample articles and related data."""
     try:
         # Import get_password_hash here to avoid circular import
@@ -114,7 +114,7 @@ async def seed_admin_and_sample_articles(session: AsyncSession, sample_articles:
             # Update existing test user to be admin
             await update_admin_user(session)
 
-        if sample_articles:
+        if os.getenv("REPLIT_DEPLOYMENT") != "1":
             # Check if articles already exist
             result = await session.execute(text(f"SELECT COUNT(*) FROM {get_table_name('article')}"))
             article_count = result.scalar()

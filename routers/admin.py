@@ -10,6 +10,7 @@ from typing import List
 from sqlalchemy.orm import selectinload
 import crud
 from schemas import ArticleRead, ArticleUpdate, UserUpdate, StatementUpdate
+import json
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -251,7 +252,7 @@ async def get_admin_statement(
 @router.put("/api/admin/statements/{statement_id}")
 async def update_statement_admin(
     statement_id: int,
-    statement_data: StatementUpdate,
+    statement_data: StatementUpdate,  # This expects a StatementUpdate model
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
@@ -266,8 +267,16 @@ async def update_statement_admin(
         raise HTTPException(status_code=404, detail="Statement not found")
     
     try:
-        for key, value in statement_data.dict(exclude_unset=True).items():
-            setattr(statement, key, value)
+        # Update statement fields
+        if statement_data.content is not None:
+            statement.content = statement_data.content
+        if statement_data.verdict is not None:
+            statement.verdict = statement_data.verdict
+        if statement_data.explanation is not None:
+            statement.explanation = statement_data.explanation
+        if statement_data.references is not None:
+            statement.references = json.dumps(statement_data.references)
+        
         await db.commit()
         await db.refresh(statement)
         return statement

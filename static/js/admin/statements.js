@@ -56,7 +56,7 @@ function displayStatements(statements) {
             </td>
             <td>${new Date(statement.created_at).toLocaleString()}</td>
             <td>
-                <button class="btn btn-sm btn-primary" onclick="editStatement(${statement.id})">
+                <button class="btn btn-sm btn-primary me-1" onclick="editStatement(${statement.id})">
                     <i class="bi bi-pencil"></i>
                 </button>
             </td>
@@ -68,7 +68,8 @@ function getVerdictBadgeClass(verdict) {
     switch (verdict) {
         case 'True': return 'bg-success';
         case 'False': return 'bg-danger';
-        case 'Partially True': return 'bg-warning';
+        case 'Mostly True': return 'bg-warning';
+        case 'Mostly False': return 'bg-warning';
         default: return 'bg-secondary';
     }
 }
@@ -125,9 +126,13 @@ async function saveStatementChanges() {
     
     let references;
     try {
-        references = JSON.parse(document.getElementById('edit-references').value);
+        const referencesText = document.getElementById('edit-references').value;
+        references = referencesText ? JSON.parse(referencesText) : [];
     } catch (error) {
-        showError('Invalid JSON format in references');
+        if (modalError) {
+            modalError.style.display = 'block';
+            modalError.textContent = 'Invalid JSON format in references field';
+        }
         return;
     }
 
@@ -139,7 +144,7 @@ async function saveStatementChanges() {
     };
 
     try {
-        // Disable save button and show loading state
+        // Show loading state
         if (saveButton) {
             saveButton.disabled = true;
             saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
@@ -159,7 +164,7 @@ async function saveStatementChanges() {
             const modal = bootstrap.Modal.getInstance(document.getElementById('editStatementModal'));
             modal.hide();
             showSuccess('Statement updated successfully');
-            loadStatements(); // Refresh the statements list
+            loadStatements();
         } else {
             const errorData = await response.json();
             throw new Error(errorData.detail || 'Failed to update statement');
