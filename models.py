@@ -82,7 +82,7 @@ class Article(SQLModel, table=True):
 
     user: Optional[User] = Relationship(back_populates="articles")
     statements: List[Statement] = Relationship(back_populates="article", sa_relationship_kwargs={"lazy": "joined"})
-
+    
     @validator("links", pre=True, always=True)
     def parse_links(cls, v):
         if isinstance(v, str):

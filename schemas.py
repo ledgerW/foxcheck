@@ -1,7 +1,8 @@
 from pydantic import BaseModel, EmailStr, validator, AnyHttpUrl
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Union
 from typing_extensions import TypedDict
 from datetime import datetime
+from dateutil import parser
 import json
 
 # User schemas
@@ -85,10 +86,19 @@ class ArticleBase(BaseModel):
     text: str
     domain: Optional[str] = None
     authors: Optional[str] = None
-    publication_date: Optional[datetime] = None
+    publication_date: Optional[Union[str, datetime]] = None
 
 class ArticleCreate(ArticleBase):
     links: Optional[List[str]] = []
+
+    @validator("publication_date", pre=True)
+    def parse_publication_date(cls, v):
+        if isinstance(v, str):
+            try:
+                return parser.parse(v)
+            except (ValueError, TypeError):
+                raise ValueError("Invalid date format for publication_date")
+        return v
 
 class ArticleRead(BaseModel):
     id: int
