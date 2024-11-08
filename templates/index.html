@@ -38,12 +38,50 @@
             display: none;
             margin: 2rem auto;
         }
+        .search-section {
+            background-color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .search-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #2c3e50;
+        }
+        .url-input {
+            border: 2px solid #e9ecef;
+            padding: 1rem;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        .url-input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        .search-btn {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        .search-error {
+            display: none;
+            margin-top: 1rem;
+        }
         @media (max-width: 768px) {
             .navbar-collapse {
                 background-color: white;
                 padding: 1rem;
                 border-radius: 8px;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .search-section {
+                padding: 2rem 1rem;
             }
         }
     </style>
@@ -52,6 +90,30 @@
     {% include 'includes/header.html' %}
 
     <div class="main-content container py-4">
+        <!-- URL Search Section -->
+        <section class="search-section">
+            <div class="search-container">
+                <h2 class="search-title">Check Article Facts</h2>
+                <form id="url-search-form" class="mb-3">
+                    <div class="input-group">
+                        <input type="url" class="form-control url-input" id="article-url" 
+                               placeholder="Enter article URL to check facts..." required>
+                        <button class="btn btn-primary search-btn" type="submit">
+                            <i class="bi bi-search"></i> Analyze
+                        </button>
+                    </div>
+                </form>
+                <div id="search-spinner" class="text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Analyzing article content...</p>
+                </div>
+                <div id="search-error" class="alert alert-danger search-error" role="alert"></div>
+            </div>
+        </section>
+
+        <!-- Articles Section -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>Latest Articles</h1>
             <button id="new-article-btn" class="btn btn-primary" style="display: none;">
@@ -75,5 +137,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/auth.js"></script>
     <script src="/static/js/articles.js"></script>
+    <script src="/static/js/search.js"></script>
 </body>
 </html>

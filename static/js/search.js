@@ -1,40 +1,40 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const searchInput = document.getElementById('search-input');
-    const searchButton = document.getElementById('search-button');
-    const searchResults = document.getElementById('search-results');
-    const loadingSpinner = document.getElementById('loading-spinner');
+    const urlSearchForm = document.getElementById('url-search-form');
+    const articleUrlInput = document.getElementById('article-url');
+    const searchSpinner = document.getElementById('search-spinner');
+    const searchError = document.getElementById('search-error');
     const loginButton = document.getElementById('login-button');
     const userInfo = document.getElementById('user-info');
     const usernameDisplay = document.getElementById('username-display');
     const logoutButton = document.getElementById('logout-button');
 
-    searchButton.addEventListener('click', performSearch);
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            performSearch();
-        }
-    });
-
+    urlSearchForm.addEventListener('submit', handleUrlSearch);
     logoutButton.addEventListener('click', handleLogout);
 
-    async function performSearch() {
-        const query = searchInput.value.trim();
-        if (query === '') {
-            displayError('Please enter a statement to check.');
+    async function handleUrlSearch(e) {
+        e.preventDefault();
+        
+        const url = articleUrlInput.value.trim();
+        if (!url) {
+            showError('Please enter a valid URL');
             return;
         }
 
-        searchResults.innerHTML = '';
-        loadingSpinner.style.display = 'inline-block';
+        // Show loading state
+        showLoading(true);
+        hideError();
 
         try {
-            const response = await fetch('/api/check_statement', {
-                method: 'POST',
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const response = await fetch(`/api/articles/from_url?url=${encodeURIComponent(url)}`, {
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                },
-                body: JSON.stringify({ statement: query })
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
             if (response.status === 401) {
@@ -44,43 +44,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.detail || 'An error occurred while checking the statement');
+                throw new Error(errorData.detail || 'Failed to analyze article');
             }
 
-            const data = await response.json();
-            displayResults(data);
+            const article = await response.json();
+            if (article) {
+                window.location.href = `/articles/${article.id}`;
+            } else {
+                showError('Could not analyze the article. Please try a different URL.');
+            }
         } catch (error) {
-            displayError(error.message);
-            console.error('Statement check error:', error);
+            console.error('Error analyzing article:', error);
+            showError(error.message || 'An error occurred while analyzing the article');
         } finally {
-            loadingSpinner.style.display = 'none';
+            showLoading(false);
         }
     }
 
-    function displayResults(result) {
-        const resultHtml = `
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Verdict: ${result.verdict}</h5>
-                    <p class="card-text">${result.explanation}</p>
-                    <h6>References:</h6>
-                    <ul>
-                        ${result.references.map(ref => `
-                            <li>
-                                <a href="${ref.source}" target="_blank">${ref.title}</a>
-                                <p>${ref.summary}</p>
-                            </li>
-                        `).join('')}
-                    </ul>
-                </div>
-            </div>
-        `;
-
-        searchResults.innerHTML = resultHtml;
+    function showLoading(show) {
+        searchSpinner.style.display = show ? 'block' : 'none';
+        articleUrlInput.disabled = show;
+        urlSearchForm.querySelector('button').disabled = show;
     }
 
-    function displayError(message) {
-        searchResults.innerHTML = `<p class="text-danger">${message}</p>`;
+    function showError(message) {
+        searchError.textContent = message;
+        searchError.style.display = 'block';
+    }
+
+    function hideError() {
+        searchError.style.display = 'none';
     }
 
     async function checkAuthStatus() {
