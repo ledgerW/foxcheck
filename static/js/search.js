@@ -62,7 +62,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showLoading(show) {
-        searchSpinner.style.display = show ? 'block' : 'none';
+        // Add show class for opacity transition
+        if (show) {
+            searchSpinner.classList.add('show');
+        } else {
+            searchSpinner.classList.remove('show');
+        }
         articleUrlInput.disabled = show;
         urlSearchForm.querySelector('button').disabled = show;
     }
@@ -70,10 +75,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function showError(message) {
         searchError.textContent = message;
         searchError.style.display = 'block';
+        // Add slide down animation
+        searchError.style.animation = 'slideDown 0.3s ease forwards';
     }
 
     function hideError() {
-        searchError.style.display = 'none';
+        // Add fade out animation
+        searchError.style.animation = 'fadeOut 0.3s ease forwards';
+        setTimeout(() => {
+            searchError.style.display = 'none';
+        }, 300);
     }
 
     async function checkAuthStatus() {
