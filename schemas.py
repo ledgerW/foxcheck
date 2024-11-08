@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, validator, AnyHttpUrl
+from pydantic import BaseModel, EmailStr, validator
 from typing import Optional, List, Any, Union
 from typing_extensions import TypedDict
 from datetime import datetime
@@ -88,6 +88,7 @@ class ArticleBase(BaseModel):
     authors: Optional[str] = None
     publication_date: Optional[Union[str, datetime]] = None
 
+
 class ArticleCreate(ArticleBase):
     links: Optional[List[str]] = []
 
@@ -99,6 +100,7 @@ class ArticleCreate(ArticleBase):
             except (ValueError, TypeError):
                 raise ValueError("Invalid date format for publication_date")
         return v
+
 
 class ArticleRead(BaseModel):
     id: int

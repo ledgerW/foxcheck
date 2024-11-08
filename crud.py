@@ -109,6 +109,20 @@ async def get_article(db: AsyncSession, article_id: int):
     result = await db.execute(stmt)
     return result.unique().scalar_one_or_none()
 
+
+async def get_article_by_url(db: AsyncSession, article_url: str):
+    stmt = (
+        select(Article)
+        .options(
+            joinedload(Article.user),
+            joinedload(Article.statements)
+        )
+        .where(Article.domain == article_url)
+    )
+    result = await db.execute(stmt)
+    return result.unique().scalar_one_or_none()
+
+
 async def get_articles(db: AsyncSession, skip: int = 0, limit: int = 100):
     stmt = (
         select(Article)
@@ -121,6 +135,7 @@ async def get_articles(db: AsyncSession, skip: int = 0, limit: int = 100):
     )
     result = await db.execute(stmt)
     return result.unique().scalars().all()
+
 
 async def update_article(db: AsyncSession, article: Article, article_update: ArticleUpdate):
     update_data = article_update.dict(exclude_unset=True)
@@ -140,9 +155,11 @@ async def update_article(db: AsyncSession, article: Article, article_update: Art
             raise ValueError(f"An article with domain '{article_update.domain}' already exists")
         raise
 
+
 async def delete_article(db: AsyncSession, article: Article):
     await db.delete(article)
     await db.commit()
+
 
 # Statement CRUD operations
 async def create_statement(db: AsyncSession, statement: Statement, article_id: int, user_id: int):

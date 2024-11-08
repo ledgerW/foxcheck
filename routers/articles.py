@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+from typing import List, Optional, Union
 from database import get_session
 from schemas import ArticleCreate, ArticleRead, ArticleUpdate, StatementRequest
 from models import User, Article, Statement
 from crud import (
     create_article,
     get_article,
+    get_article_by_url,
     get_articles,
     update_article,
     delete_article,
@@ -15,6 +16,8 @@ from crud import (
 )
 from auth import get_current_active_user
 from routers.api import get_statements, check_statement
+from chains.article_metadata_chain import chain as metadata_chain
+from langchain_community.retrievers import TavilySearchAPIRetriever
 import json
 import asyncio
 
@@ -36,18 +39,19 @@ async def create_new_article(
     verdicts = await asyncio.gather(*check_tasks)
 
     for statement, verdict in zip(statements, verdicts):
-        statement_create = Statement(
-            content=statement,
-            verdict=verdict.verdict,
-            explanation=verdict.explanation
-        )
-        statement_create.references = json.dumps(verdict.references)
-        db_statement = await create_statement(
-            db=db,
-            statement=statement_create, 
-            article_id=db_article.id, 
-            user_id=current_user.id
-        )
+        if verdict:
+            statement_create = Statement(
+                content=statement,
+                verdict=verdict.verdict,
+                explanation=verdict.explanation
+            )
+            statement_create.references = json.dumps(verdict.references)
+            db_statement = await create_statement(
+                db=db,
+                statement=statement_create, 
+                article_id=db_article.id, 
+                user_id=current_user.id
+            )
         
     return db_article
     #except ValueError as e:
@@ -62,6 +66,50 @@ async def create_new_article(
     #        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     #        content={'status': 'error', 'message': str(e)}
     #    )
+
+
+@router.post("/from_url", response_model=Union[ArticleRead, None])
+async def get_article_from_url(
+    url: str,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_active_user)
+):
+    domain = url.split('//')[1].split('/')[0]
+    domain = 'https://' + domain
+
+    print(url)
+    print(domain)
+    search = TavilySearchAPIRetriever(k=3, include_raw_content=True, include_domains=[domain])
+
+    try:
+        res = await search.ainvoke(url)
+
+        doc = [doc for doc in res if doc.metadata['source']==url]
+        if doc:
+            print("Search url found")
+            doc = doc[0]
+        else:
+            print('Search url not found, using closest article')
+            doc = res[0]
+
+        result = {
+            'title': doc.metadata['title'],
+            'domain': url,
+            'text': doc.page_content
+        }
+    except Exception as e:
+        print(e)
+        result = None
+
+    if result:
+        metadata = await metadata_chain.ainvoke(result['text'])
+        result = result | metadata.dict()
+        db_article = await create_new_article(article=ArticleCreate(**result), db=db, current_user=current_user)
+        return db_article
+    else:
+        return None
+
+
 
 @router.get("", response_model=List[ArticleRead])
 async def read_articles(
@@ -81,6 +129,18 @@ async def read_article(
     if article is None:
         raise HTTPException(status_code=404, detail="Article not found")
     return article
+
+
+@router.get("/url/{article_url}", response_model=ArticleRead)
+async def read_article_by_url(
+    article_url: str,
+    db: AsyncSession = Depends(get_session)
+):
+    article = await get_article_by_url(db, article_url=article_url)
+    if article is None:
+        raise HTTPException(status_code=404, detail="Article not found")
+    return article
+
 
 @router.put("/{article_id}", response_model=ArticleRead)
 async def update_existing_article(
