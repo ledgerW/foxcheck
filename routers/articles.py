@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional, Union
+from pydantic import BaseModel, Field
 from database import get_session
 from schemas import ArticleCreate, ArticleRead, ArticleUpdate, StatementRequest
 from models import User, Article, Statement
@@ -54,12 +55,17 @@ async def create_new_article(
         
     return db_article
 
-@router.get("/from_url", response_model=Union[ArticleRead, None])
+
+class UrlRequest(BaseModel):
+    url: str
+
+@router.post("/from_url", response_model=Union[ArticleRead, None])
 async def get_article_from_url(
-    url: str = Query(..., description="The URL of the article to analyze"),
+    url: UrlRequest,
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
+    url = url.url
     domain = url.split('//')[1].split('/')[0]
     domain = 'https://' + domain
 

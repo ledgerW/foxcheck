@@ -26,12 +26,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const response = await fetch('/api/articles/from_url?url=' + encodeURIComponent(url), {
-                method: 'GET',  // Explicitly set GET method
+            const response = await fetch(`/api/articles/from_url`, {
+                method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url })
             });
+
 
             if (response.status === 401) {
                 window.location.href = '/login';
