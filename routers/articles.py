@@ -29,7 +29,6 @@ async def create_new_article(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    #try:
     db_article = await create_article(db=db, article=article, user_id=current_user.id)
 
     statements = await get_statements(article.text)
@@ -54,31 +53,16 @@ async def create_new_article(
             )
         
     return db_article
-    #except ValueError as e:
-    #    # Return JSON response instead of raising exception
-    #    return JSONResponse(
-    #        status_code=status.HTTP_409_CONFLICT,
-    #        content={'status': 'error', 'message': str(e)}
-    #    )
-    #except Exception as e:
-    #    await db.rollback()
-    #    return JSONResponse(
-    #        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #        content={'status': 'error', 'message': str(e)}
-    #    )
 
-
-@router.post("/from_url", response_model=Union[ArticleRead, None])
+@router.get("/from_url", response_model=Union[ArticleRead, None])
 async def get_article_from_url(
-    url: str,
+    url: str = Query(..., description="The URL of the article to analyze"),
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
     domain = url.split('//')[1].split('/')[0]
     domain = 'https://' + domain
 
-    print(url)
-    print(domain)
     search = TavilySearchAPIRetriever(k=3, include_raw_content=True, include_domains=[domain])
 
     try:
@@ -109,8 +93,6 @@ async def get_article_from_url(
     else:
         return None
 
-
-
 @router.get("", response_model=List[ArticleRead])
 async def read_articles(
     skip: int = Query(default=0, ge=0),
@@ -130,7 +112,6 @@ async def read_article(
         raise HTTPException(status_code=404, detail="Article not found")
     return article
 
-
 @router.get("/url/{article_url}", response_model=ArticleRead)
 async def read_article_by_url(
     article_url: str,
@@ -140,7 +121,6 @@ async def read_article_by_url(
     if article is None:
         raise HTTPException(status_code=404, detail="Article not found")
     return article
-
 
 @router.put("/{article_id}", response_model=ArticleRead)
 async def update_existing_article(

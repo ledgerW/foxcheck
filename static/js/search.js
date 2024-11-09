@@ -3,13 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const articleUrlInput = document.getElementById('article-url');
     const searchSpinner = document.getElementById('search-spinner');
     const searchError = document.getElementById('search-error');
-    const loginButton = document.getElementById('login-button');
-    const userInfo = document.getElementById('user-info');
-    const usernameDisplay = document.getElementById('username-display');
-    const logoutButton = document.getElementById('logout-button');
 
     urlSearchForm.addEventListener('submit', handleUrlSearch);
-    logoutButton.addEventListener('click', handleLogout);
 
     async function handleUrlSearch(e) {
         e.preventDefault();
@@ -31,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const response = await fetch(`/api/articles/from_url?url=${encodeURIComponent(url)}`, {
+            const response = await fetch('/api/articles/from_url?url=' + encodeURIComponent(url), {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -86,40 +81,4 @@ document.addEventListener('DOMContentLoaded', () => {
             searchError.style.display = 'none';
         }, 300);
     }
-
-    async function checkAuthStatus() {
-        try {
-            const response = await fetch('/api/auth/status', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                if (data.authenticated) {
-                    loginButton.style.display = 'none';
-                    userInfo.style.display = 'block';
-                    usernameDisplay.textContent = data.username;
-                } else {
-                    loginButton.style.display = 'block';
-                    userInfo.style.display = 'none';
-                }
-            } else {
-                loginButton.style.display = 'block';
-                userInfo.style.display = 'none';
-            }
-        } catch (error) {
-            console.error('Error checking auth status:', error);
-            loginButton.style.display = 'block';
-            userInfo.style.display = 'none';
-        }
-    }
-
-    async function handleLogout() {
-        localStorage.removeItem('access_token');
-        await checkAuthStatus();
-    }
-
-    checkAuthStatus();
 });
