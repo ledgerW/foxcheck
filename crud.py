@@ -2,7 +2,7 @@ from pydantic import AnyHttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload, joinedload
-from sqlalchemy import update, delete
+from sqlalchemy import update, delete, desc
 from typing import Optional, List
 from models import User, Article, Statement
 from schemas import UserCreate, UserUpdate, ArticleCreate, ArticleUpdate, StatementCreate, Reference
@@ -132,6 +132,7 @@ async def get_articles(db: AsyncSession, skip: int = 0, limit: int = 100):
         )
         .offset(skip)
         .limit(limit)
+        .order_by(desc(Article.date))
     )
     result = await db.execute(stmt)
     return result.unique().scalars().all()
