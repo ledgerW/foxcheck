@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const response = await fetch('/api/articles/from_url?url=' + encodeURIComponent(url), {
+                method: 'GET',  // Explicitly set GET method
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
