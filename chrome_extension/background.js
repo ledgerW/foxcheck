@@ -1,13 +1,6 @@
 // Function to detect if we are in a DEV or PROD environment
 function getBackendURL() {
-    const manifest = chrome.runtime.getManifest();
-    if (manifest.key) {
-        // This is PROD, use the production URL
-        return "https://async-fast-api-chain-ledgerw.replit.app";
-    } else {
-        // This is DEV, use the development URL
-        return "https://async-fast-api-chain-ledgerw.replit.app";
-    }
+    return "https://async-fast-api-chain-ledgerw.replit.app";
 }
 
 // Function to handle user logout
@@ -47,6 +40,8 @@ async function loginUser(username, password) {
             console.log('Login successful, token stored.');
             return { success: true };
         } else {
+            //const data = await response.json();
+            //console.log(data)
             throw new Error('Login failed');
         }
     } catch (error) {
@@ -73,6 +68,7 @@ async function submitArticle(articleData) {
     }
 
     try {
+        console.log(articleData)
         const response = await fetch(`${getBackendURL()}/api/articles`, {
             method: 'POST',
             headers: {
@@ -103,25 +99,54 @@ async function submitArticle(articleData) {
     }
 }
 
-// Listen for messages from popup.js or content.js
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'getActiveTabInfo') {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs.length > 0) {
+                const tab = tabs[0];
+                sendResponse({ success: true, url: tab.url, tabId: tab.id });
+            } else {
+                sendResponse({ success: false, error: 'No active tab found' });
+            }
+        });
+        return true;  // Keep the message channel open for async response
+    }
+
     if (request.action === 'login') {
-        loginUser(request.username, request.password).then(sendResponse);
-        return true; // Keep the messaging channel open for async response
+        loginUser(request.username, request.password)
+            .then((result) => sendResponse({ success: true, ...result }))
+            .catch((error) => sendResponse({ success: false, error: error.message }));
+        return true;
     }
 
     if (request.action === 'checkLoginStatus') {
-        checkLoginStatus().then(sendResponse);
+        checkLoginStatus()
+            .then((isLoggedIn) => sendResponse({ success: true, loggedIn: isLoggedIn }))
+            .catch((error) => sendResponse({ success: false, error: error.message }));
         return true;
     }
 
     if (request.action === 'submitArticle') {
-        submitArticle(request.articleData).then(sendResponse);
+        submitArticle(request.articleData)
+            .then((result) => sendResponse({ success: true, ...result }))
+            .catch((error) => sendResponse({ success: false, error: error.message }));
         return true;
     }
 
     if (request.action === 'logout') {
-        logoutUser().then(sendResponse);  // Handle logout
+        logoutUser()
+            .then((result) => sendResponse({ success: true, ...result }))
+            .catch((error) => sendResponse({ success: false, error: error.message }));
         return true;
     }
 });
+
+
+
+
+chrome.action.onClicked.addListener((tab) => {
+    chrome.tabs.sendMessage(tab.id, { action: 'toggleSidebar' });
+});
+
+

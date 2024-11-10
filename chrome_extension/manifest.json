@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "NYT Article Checker",
+    "name": "Foxcheck",
     "version": "1.0",
-    "description": "Extract and fact-check statements from NYT articles.",
+    "description": "Verify statements",
     "permissions": [
       "storage",
       "tabs",
@@ -10,18 +10,15 @@
       "scripting"
     ],
     "host_permissions": [
-        "https://async-fast-api-chain-ledgerw.replit.app/*",
-        "https://d90c7780-fd55-44f9-870e-7f4d33bee331-00-1oo5r4dkhtpv4.spock.replit.dev/*"
+        "https://async-fast-api-chain-ledgerw.replit.app/*"
     ],
     "background": {
       "service_worker": "background.js"
     },
-    "action": {
-      "default_popup": "popup.html"
-    },
+    "action": {},
     "content_scripts": [
       {
-        "matches": ["https://www.nytimes.com/*"],
+        "matches": ["<all_urls>"],
         "js": ["content.js"]
       }
     ]
