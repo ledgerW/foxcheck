@@ -79,7 +79,7 @@ if __name__ == "__main__":
     test_set = asyncio.run(ragas_sdg(
         context_docs=chunks,
         n_qa_pairs=n_qa_pairs,
-        embedding_model=OpenAIEmbeddings(model='text-embedding-3-small')
+        embedding_model=OpenAIEmbeddings(model='text-embedding-3-large')
     ))
 
     # Save as LangSmith Dataset
