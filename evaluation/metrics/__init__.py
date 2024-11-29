@@ -1,5 +1,4 @@
 from ._statement_evaluation import statement_evaluation
-from ._statement_worthiness import statement_worthiness
 from ._faithfulness import faithfulness
 from ._answer_relevancy import answer_relevancy
 from ._context_precision import context_precision

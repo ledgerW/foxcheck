@@ -3,4 +3,4 @@ metrics: ['statement_evaluation']
 chain: 'multi-agent-fact-check'
 ls_project: 'Fact Checker'
 ls_dataset_name: "fact-checking-v1"
-ls_experiment_name: 'opt-multi-hop-checker'
+ls_experiment_name: 'multi-agent-checker'

@@ -5,14 +5,15 @@ load_dotenv()
 import yaml
 import argparse
 
-
 from chains.fact_check_chain import base_fact_check, multi_hop_fact_check
+from agents.statement_checker import multi_agent_fact_check
 from evaluation.eval_utils import eval_on_ls_dataset
 
 
 CHAINS = {
     'base-check': base_fact_check,
-    'multi-hop-fact-check': multi_hop_fact_check
+    'multi-hop-fact-check': multi_hop_fact_check,
+    'multi-agent-fact-check': multi_agent_fact_check
 }
 
 
