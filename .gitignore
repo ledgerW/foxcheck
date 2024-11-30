@@ -2,3 +2,4 @@ __pychache__/
 .files/
 chainlit/__pychache__/
 routers/__pycache__/
+.env

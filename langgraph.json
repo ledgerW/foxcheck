@@ -1,0 +1,23 @@
+{
+  "dockerfile_lines": [
+    "# Copy the project into the container",
+    "COPY . /deps/foxcheck",
+    "",
+    "# Set the working directory",
+    "WORKDIR /deps/foxcheck",
+    "",
+    "# Upgrade pip and setuptools",
+    "RUN pip install --upgrade pip setuptools",
+    "",
+    "# Install dependencies from the project",
+    "RUN PYTHONDONTWRITEBYTECODE=1 pip install -c /api/constraints.txt -e ."
+  ],
+  "graphs": {
+    "statement_checker": "./agents/statement_checker.py:agent_graph"
+  },
+  "env": ".env",
+  "python_version": "3.11",
+  "dependencies": [
+    "pyproject.toml"
+  ]
+}

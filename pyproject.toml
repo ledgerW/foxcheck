@@ -8,7 +8,6 @@ dependencies = [
     "asyncio>=3.4.3",
     "asyncpg>=0.30.0",
     "bcrypt>=4.2.0",
-    "chainlit>=1.2.0",
     "django-routers>=0.2",
     "dspy-ai>=2.5.20",
     "email-validator>=2.2.0",
@@ -44,3 +43,7 @@ dependencies = [
     "uvicorn>=0.25.0",
     "wikipedia>=1.4.0",
 ]
+
+[tool.setuptools]
+# Specify package inclusion and exclusion rules
+packages = { find = { include = ["agents", "chains"] } }

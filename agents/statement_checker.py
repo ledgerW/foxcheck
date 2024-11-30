@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from langchain_core.runnables import RunnablePassthrough
 load_dotenv()
 
-from typing import Literal, Annotated, List, Sequence
+from typing import Literal, Annotated, List, Sequence, Optional
 from typing_extensions import TypedDict
 
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -18,6 +18,7 @@ from langgraph.graph.message import add_messages
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import StateGraph, START, END
+from langgraph.pregel import RetryPolicy
 
 from pydantic import BaseModel, Field
 from typing import Literal
@@ -32,23 +33,13 @@ from chains.adjudicator_chain import chain as judge_chain, Verdict
 
 # State
 class GraphState(TypedDict):
-    # The add_messages function defines how an update should be processed
-    # Default is to replace. add_messages says "append"
-    current_date: str = str(datetime.today())
+    current_date: str
     statement: str
     messages: Annotated[Sequence[BaseMessage], add_messages]
-    research: List[ToolMessage]
-    verdict: Verdict
+    research: Optional[List[ToolMessage]]
+    verdict: Optional[Verdict]
     improved: bool
     next: str
-
-
-def next_action(message: AIMessage) -> str:
-    if message.tool_calls:
-        return message.tool_calls[0]['name']
-    else:
-        print('Error')
-        return 'supervisor'
 
 
 # Tools
@@ -94,10 +85,6 @@ def judge(state: GraphState) -> GraphState:
     research = state['research']
     verdict = judge_chain.invoke({'statement': statement, 'research': research})
     return {'verdict': verdict}
-
-
-## All Tools
-tools = [search_wikipedia, search_arxiv, search_web, JudgeStatement]
 
 
 # Reviewer Agent (returns message as ToolMessage)
@@ -146,40 +133,53 @@ Does this Verdict need improvement or is it finished and ready to publish?
         name='review',
         status='success'
     )
-    next = 'FINISH' if state['improved'] else message.tool_calls[0]['args']['next']
+    try:
+        next = 'FINISH' if state['improved'] else message.tool_calls[0]['args']['next']
+    except:
+        next = message.tool_calls[0]['args']['next']
     return {'messages': [review_message], 'next': next, 'improved': True}
 
 
-# Supervisor
-opening_prompt = """
-You are a journalist on the prestigious fact-checking team at a major news publication. Journalistic integrity is paramount. 
-
-This is the Statement you are tasked with fact-checking: {statement}
-
-A high quality statement fact-check result will a) have a complete explanation, b) will not have or will take into account 
-reasonable alternate explanations, and c) will not be based on information that isn't present or will take into account 
-lack of information. In other words, it will be air-tight and cogent and ideally be corroborated by more than one source.
-
-Below is the work you've done so far.
-"""
-
-closing_prompt = """
-Given the work done so far, which tool action do you want to 
-take next? You must chose one of the tools."
-"""
-
-
-prompt = ChatPromptTemplate.from_messages(
-    [
-        SystemMessage(opening_prompt),
-        MessagesPlaceholder(variable_name="messages"),
-        SystemMessage(closing_prompt)
-    ]
-)
-
-llm = ChatOpenAI(model="gpt-4o", streaming=True).bind_tools(tools)
 
 def supervisor_agent(state: GraphState) -> GraphState:
+    def next_action(message: AIMessage) -> str:
+        if message.tool_calls:
+            return message.tool_calls[0]['name']
+        else:
+            print('Error')
+            return 'supervisor'
+        
+    ## All Tools
+    tools = [search_wikipedia, search_arxiv, search_web, JudgeStatement]
+    
+    # Supervisor
+    opening_prompt = """
+    You are a journalist on the prestigious fact-checking team at a major news publication. Journalistic integrity is paramount. 
+
+    This is the Statement you are tasked with fact-checking: {statement}
+
+    A high quality statement fact-check result will a) have a complete explanation, b) will not have or will take into account 
+    reasonable alternate explanations, and c) will not be based on information that isn't present or will take into account 
+    lack of information. In other words, it will be air-tight and cogent and ideally be corroborated by more than one source.
+
+    Below is the work you've done so far.
+    """
+
+    closing_prompt = """
+    Given the work done so far, which one of your available tool actions do you want to 
+    take next? You must chose one of your available tools.
+    """
+
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessage(opening_prompt),
+            MessagesPlaceholder(variable_name="messages"),
+            SystemMessage(closing_prompt)
+        ]
+    )
+
+    llm = ChatOpenAI(model="gpt-4o", streaming=True).bind_tools(tools)
     supervisor_chain = prompt | llm
     message = supervisor_chain.invoke(state)
     research = [msg for msg in state['messages'] if isinstance(msg, ToolMessage)]
@@ -190,12 +190,12 @@ def supervisor_agent(state: GraphState) -> GraphState:
 # The Graph
 graph = StateGraph(GraphState)
 
-graph.add_node('supervisor', supervisor_agent)
-graph.add_node('wikipedia', search_wikipedia_node)
-graph.add_node('arxiv', search_arxiv_node)
-graph.add_node('web', search_web_node)
-graph.add_node('judgement', judge)
-graph.add_node('review', review)
+graph.add_node('supervisor', supervisor_agent, retry=RetryPolicy(max_attempts=2))
+graph.add_node('wikipedia', search_wikipedia_node, retry=RetryPolicy(max_attempts=2))
+graph.add_node('arxiv', search_arxiv_node, retry=RetryPolicy(max_attempts=2))
+graph.add_node('web', search_web_node, retry=RetryPolicy(max_attempts=2))
+graph.add_node('judgement', judge, retry=RetryPolicy(max_attempts=2))
+graph.add_node('review', review, retry=RetryPolicy(max_attempts=2))
 
 graph.add_edge(START, 'supervisor')
 graph.add_conditional_edges(
@@ -223,6 +223,7 @@ graph.add_conditional_edges(
 )
 
 agent_graph = graph.compile()
+agent_graph.name = "Multi-Agent Statement Checker"
 
 
 
