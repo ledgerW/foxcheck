@@ -84,7 +84,7 @@ async def get_article_from_url(
 
         result = {
             'title': doc.metadata['title'],
-            'domain': url,
+            'domain': doc.metadata['source'],
             'text': doc.page_content
         }
     except Exception as e:

@@ -8,7 +8,8 @@ from typing import List, Union
 from schemas import StatementRequest
 from chains.statement_chain import get_statements as _get_statements
 from chains.adjudicator_chain import Verdict
-from chains.fact_check_chain import multi_hop_fact_check as fact_check_chain
+#from chains.fact_check_chain import multi_hop_fact_check as fact_check_chain
+from agents.statement_checker import multi_agent_fact_check as fact_check_chain
 
 
 router = APIRouter(prefix="/api", tags=["api"])
