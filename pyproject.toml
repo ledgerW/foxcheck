@@ -20,6 +20,7 @@ dependencies = [
     "langchain-qdrant>=0.1.4",
     "langchain-text-splitters>=0.3.0",
     "langchain>=0.3.4",
+    "langgraph-cli[inmem]>=0.1.61",
     "langgraph>=0.2.50",
     "langsmith>=0.1.136",
     "openai>=1.52.0",

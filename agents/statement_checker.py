@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from langchain_core.runnables import RunnablePassthrough
+
 load_dotenv()
 
 from typing import Literal, Annotated, List, Sequence, Optional
@@ -50,6 +51,7 @@ def search_wikipedia(query: str) -> List[dict]:
     docs = wiki_retriever.invoke(query)
     return [doc.dict() for doc in docs]
 
+
 search_wikipedia_node = ToolNode([search_wikipedia])
 
 
@@ -58,7 +60,8 @@ search_wikipedia_node = ToolNode([search_wikipedia])
 def search_arxiv(query: str) -> List[dict]:
     """Search Arxiv. Useful for when you need scholarly technical papers."""
     docs = arxiv_retriever.invoke(query)
-    return [doc.dict() for doc in docs] 
+    return [doc.dict() for doc in docs]
+
 
 search_arxiv_node = ToolNode([search_arxiv])
 
@@ -70,6 +73,7 @@ def search_web(query: str) -> List[dict]:
     docs = web_retriever.invoke(query)
     return [doc.dict() for doc in docs]
 
+
 search_web_node = ToolNode([search_web])
 
 
@@ -79,18 +83,22 @@ class JudgeStatement(BaseModel):
     Useful when you're confident you have sufficient information to render a verdict on the statement."""
     statement: str = Field(description="the statement to be Judged.")
 
+
 def judge(state: GraphState) -> GraphState:
     """Render a Verdict on the Statement given the available research. Useful when you probably have enough information about the Statement."""
     statement = state['statement']
     research = state['research']
-    verdict = judge_chain.invoke({'statement': statement, 'research': research})
+    verdict = judge_chain.invoke({
+        'statement': statement,
+        'research': research
+    })
     return {'verdict': verdict}
 
 
 # Reviewer Agent (returns message as ToolMessage)
 def review(state: GraphState) -> GraphState:
     """Render a Verdict on the Statement given the available research. Useful when you probably have enough information about the Statement."""
-    
+
     statement = state['statement']
     verdict = state['verdict']
 
@@ -111,15 +119,15 @@ lack of information. In other words, it will be air-tight and cogent and ideally
 Does this Verdict need improvement or is it finished and ready to publish?
 """.format(statement=statement, verdict=verdict)
 
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            SystemMessage(opening_prompt)
-        ]
-    )
+    prompt = ChatPromptTemplate.from_messages([SystemMessage(opening_prompt)])
 
     class ReviewFeedback(BaseModel):
-        next: Annotated[Literal["Improve", "FINISH"], "Does this Verdict need Improvement, or is it FINISHED?"]
-        comments: Annotated[str, "If recommending to Improve, then why?  What does fact-check team need to do to make this better?"]
+        next: Annotated[
+            Literal["Improve", "FINISH"],
+            "Does this Verdict need Improvement, or is it FINISHED?"]
+        comments: Annotated[
+            str,
+            "If recommending to Improve, then why?  What does fact-check team need to do to make this better?"]
 
     tools = [ReviewFeedback]
 
@@ -131,27 +139,27 @@ Does this Verdict need improvement or is it finished and ready to publish?
         content=message.tool_calls[0]['args']['comments'],
         tool_call_id=state['messages'][-1].tool_calls[0]['id'],
         name='review',
-        status='success'
-    )
+        status='success')
     try:
-        next = 'FINISH' if state['improved'] else message.tool_calls[0]['args']['next']
+        next = 'FINISH' if state['improved'] else message.tool_calls[0][
+            'args']['next']
     except:
         next = message.tool_calls[0]['args']['next']
     return {'messages': [review_message], 'next': next, 'improved': True}
 
 
-
 def supervisor_agent(state: GraphState) -> GraphState:
+
     def next_action(message: AIMessage) -> str:
         if message.tool_calls:
             return message.tool_calls[0]['name']
         else:
             print('Error')
             return 'supervisor'
-        
+
     ## All Tools
     tools = [search_wikipedia, search_arxiv, search_web, JudgeStatement]
-    
+
     # Supervisor
     opening_prompt = """
     You are a journalist on the prestigious fact-checking team at a major news publication. Journalistic integrity is paramount. 
@@ -167,22 +175,22 @@ def supervisor_agent(state: GraphState) -> GraphState:
 
     closing_prompt = """
     Given the work done so far, which one of your available tool actions do you want to 
-    take next? You must chose one of your available tools.
+    take next - more research or make a judgement? You must chose one of your available tools.
+    You never respond directly, you only respond with a tool call.
     """
 
-
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            SystemMessage(opening_prompt),
-            MessagesPlaceholder(variable_name="messages"),
-            SystemMessage(closing_prompt)
-        ]
-    )
+    prompt = ChatPromptTemplate.from_messages([
+        SystemMessage(opening_prompt),
+        MessagesPlaceholder(variable_name="messages"),
+        SystemMessage(closing_prompt)
+    ])
 
     llm = ChatOpenAI(model="gpt-4o", streaming=True).bind_tools(tools)
     supervisor_chain = prompt | llm
     message = supervisor_chain.invoke(state)
-    research = [msg for msg in state['messages'] if isinstance(msg, ToolMessage)]
+    research = [
+        msg for msg in state['messages'] if isinstance(msg, ToolMessage)
+    ]
     next = next_action(message)
     return {'messages': [message], 'research': research, 'next': next}
 
@@ -190,8 +198,12 @@ def supervisor_agent(state: GraphState) -> GraphState:
 # The Graph
 graph = StateGraph(GraphState)
 
-graph.add_node('supervisor', supervisor_agent, retry=RetryPolicy(max_attempts=2))
-graph.add_node('wikipedia', search_wikipedia_node, retry=RetryPolicy(max_attempts=2))
+graph.add_node('supervisor',
+               supervisor_agent,
+               retry=RetryPolicy(max_attempts=2))
+graph.add_node('wikipedia',
+               search_wikipedia_node,
+               retry=RetryPolicy(max_attempts=2))
 graph.add_node('arxiv', search_arxiv_node, retry=RetryPolicy(max_attempts=2))
 graph.add_node('web', search_web_node, retry=RetryPolicy(max_attempts=2))
 graph.add_node('judgement', judge, retry=RetryPolicy(max_attempts=2))
@@ -199,33 +211,24 @@ graph.add_node('review', review, retry=RetryPolicy(max_attempts=2))
 
 graph.add_edge(START, 'supervisor')
 graph.add_conditional_edges(
-    'supervisor',
-    lambda x: x['next'],
-    {
+    'supervisor', lambda x: x['next'], {
         'search_wikipedia': 'wikipedia',
         'search_arxiv': 'arxiv',
         'search_web': 'web',
         'JudgeStatement': 'judgement'
-    }
-)
+    })
 graph.add_edge('wikipedia', 'supervisor')
 graph.add_edge('arxiv', 'supervisor')
 graph.add_edge('web', 'supervisor')
 graph.add_edge('judgement', 'review')
 
-graph.add_conditional_edges(
-    'review',
-    lambda x: x['next'],
-    {
-        'Improve': 'supervisor',
-        'FINISH': END
-    }
-)
+graph.add_conditional_edges('review', lambda x: x['next'], {
+    'Improve': 'supervisor',
+    'FINISH': END
+})
 
 agent_graph = graph.compile()
 agent_graph.name = "Multi-Agent Statement Checker"
-
-
 
 ## As Chain
 get_state = lambda x: GraphState(**x)
@@ -234,10 +237,7 @@ get_messages = lambda x: [HumanMessage(x['statement'])]
 get_improved = lambda x: False
 
 multi_agent_fact_check = (
-    RunnablePassthrough.assign(
-        messages = get_messages,
-        improved = get_improved
-    )
+    RunnablePassthrough.assign(messages=get_messages, improved=get_improved)
     | get_state | agent_graph
     | get_verdict
 ).with_config({"run_name": "Multi-Agent Statement Checker"})

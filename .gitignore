@@ -3,3 +3,4 @@ __pychache__/
 chainlit/__pychache__/
 routers/__pycache__/
 .env
+.langgraph_api/
